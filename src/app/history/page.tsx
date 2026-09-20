@@ -25,7 +25,9 @@ export default async function HistoryPage() {
         <CardContent className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <Link className="quiz-text-link" href="/">{quizText.backToHomeLink}</Link>
+              <Button className="quiz-button quiz-button-white" asChild>
+                <Link href="/">{quizText.backButton}</Link>
+              </Button>
               <h1 className="mt-3 text-3xl font-semibold">{quizText.historyHeading}</h1>
             </div>
             <Button className="quiz-button quiz-button-blue" asChild>

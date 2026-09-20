@@ -1,0 +1,52 @@
+[
+  {
+    "text": "Which planet is known as the Red Planet?",
+    "choices": ["Venus", "Mars", "Jupiter", "Mercury"],
+    "correctIndex": 1
+  },
+  {
+    "text": "What is the capital city of France?",
+    "choices": ["Paris", "Berlin", "Madrid", "Rome"],
+    "correctIndex": 0
+  },
+  {
+    "text": "Which gas do plants absorb from the atmosphere?",
+    "choices": ["Oxygen", "Carbon dioxide", "Nitrogen", "Helium"],
+    "correctIndex": 1
+  },
+  {
+    "text": "How many sides does a hexagon have?",
+    "choices": ["Five", "Six", "Seven", "Eight"],
+    "correctIndex": 1
+  },
+  {
+    "text": "Who wrote the play Romeo and Juliet?",
+    "choices": ["William Shakespeare", "Jane Austen", "Charles Dickens", "Mark Twain"],
+    "correctIndex": 0
+  },
+  {
+    "text": "What is the largest ocean on Earth?",
+    "choices": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
+    "correctIndex": 2
+  },
+  {
+    "text": "Which instrument has keys, pedals, and strings?",
+    "choices": ["Flute", "Piano", "Drum", "Trumpet"],
+    "correctIndex": 1
+  },
+  {
+    "text": "What is the freezing point of water in Celsius?",
+    "choices": ["0 degrees", "10 degrees", "32 degrees", "100 degrees"],
+    "correctIndex": 0
+  },
+  {
+    "text": "Which shape has three sides?",
+    "choices": ["Triangle", "Square", "Pentagon", "Circle"],
+    "correctIndex": 0
+  },
+  {
+    "text": "What is the main language spoken in Brazil?",
+    "choices": ["Spanish", "Portuguese", "French", "Italian"],
+    "correctIndex": 1
+  }
+]

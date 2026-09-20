@@ -1,0 +1,124 @@
+"use server";
+
+// Checks submitted answers on the server and saves anonymous quiz attempts.
+
+import { getPrisma } from "@/lib/prisma";
+import { quizSettings } from "@/config";
+
+export type QuizSubmission = {
+  questionId: string;
+  choiceId: string;
+};
+
+export type QuizResultQuestion = {
+  questionId: string;
+  questionText: string;
+  correctAnswerText: string;
+  userAnswerText: string;
+  isCorrect: boolean;
+};
+
+export type QuizResult = {
+  attemptId: string;
+  score: number;
+  correctCount: number;
+  wrongCount: number;
+  questions: QuizResultQuestion[];
+};
+
+export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult> {
+  const prisma = getPrisma();
+
+  if (answers.length !== quizSettings.questionCount) {
+    throw new Error(`Please answer all ${quizSettings.questionCount} questions before submitting.`);
+  }
+
+  const questionIds = answers.map((answer) => answer.questionId);
+  const uniqueQuestionIds = new Set(questionIds);
+
+  if (uniqueQuestionIds.size !== answers.length) {
+    throw new Error("Each question can only be answered once.");
+  }
+
+  const questions = await prisma.question.findMany({
+    where: {
+      id: {
+        in: questionIds,
+      },
+    },
+    include: {
+      choices: true,
+    },
+  });
+
+  if (questions.length !== answers.length) {
+    throw new Error("One or more questions could not be found.");
+  }
+
+  const questionById = new Map(questions.map((question) => [question.id, question]));
+
+  const checkedAnswers = answers.map((answer) => {
+    const question = questionById.get(answer.questionId);
+
+    if (!question) {
+      throw new Error("Question not found.");
+    }
+
+    const selectedChoice = question.choices.find((choice) => choice.id === answer.choiceId);
+    const correctChoice = question.choices.find((choice) => choice.isCorrect);
+
+    if (!selectedChoice || selectedChoice.questionId !== question.id) {
+      throw new Error("Selected choice does not belong to the question.");
+    }
+
+    if (!correctChoice) {
+      throw new Error("Question is missing a correct answer.");
+    }
+
+    // Answer checking happens here on the server, after the browser sends only question and choice IDs.
+    const isCorrect = selectedChoice.id === correctChoice.id;
+
+    return {
+      question,
+      selectedChoice,
+      correctChoice,
+      isCorrect,
+    };
+  });
+
+  const correctCount = checkedAnswers.filter((answer) => answer.isCorrect).length;
+  const wrongCount = checkedAnswers.length - correctCount;
+  // Scoring is intentionally allowed to go below zero.
+  const score =
+    correctCount * quizSettings.pointsForCorrectAnswer +
+    wrongCount * quizSettings.pointsForWrongAnswer;
+
+  const attempt = await prisma.attempt.create({
+    data: {
+      score,
+      correctCount,
+      wrongCount,
+      answers: {
+        create: checkedAnswers.map((answer) => ({
+          questionId: answer.question.id,
+          choiceId: answer.selectedChoice.id,
+          isCorrect: answer.isCorrect,
+        })),
+      },
+    },
+  });
+
+  return {
+    attemptId: attempt.id,
+    score,
+    correctCount,
+    wrongCount,
+    questions: checkedAnswers.map((answer) => ({
+      questionId: answer.question.id,
+      questionText: answer.question.text,
+      correctAnswerText: answer.correctChoice.text,
+      userAnswerText: answer.selectedChoice.text,
+      isCorrect: answer.isCorrect,
+    })),
+  };
+}

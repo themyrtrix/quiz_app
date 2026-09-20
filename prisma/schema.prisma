@@ -1,0 +1,55 @@
+// Defines the QuizMart database tables used by Prisma.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Question {
+  id             String          @id @default(cuid())
+  text           String
+  choices        Choice[]
+  attemptAnswers AttemptAnswer[]
+  createdAt      DateTime        @default(now())
+}
+
+model Choice {
+  id             String          @id @default(cuid())
+  text           String
+  isCorrect      Boolean         @default(false)
+  questionId     String
+  question       Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attemptAnswers AttemptAnswer[]
+  createdAt      DateTime        @default(now())
+
+  @@index([questionId])
+}
+
+model Attempt {
+  id           String          @id @default(cuid())
+  score        Int
+  correctCount Int
+  wrongCount   Int
+  answers      AttemptAnswer[]
+  createdAt    DateTime        @default(now())
+}
+
+model AttemptAnswer {
+  id         String   @id @default(cuid())
+  attemptId  String
+  questionId String
+  choiceId   String
+  isCorrect  Boolean
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  choice     Choice   @relation(fields: [choiceId], references: [id], onDelete: Restrict)
+  createdAt  DateTime @default(now())
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+  @@index([choiceId])
+}

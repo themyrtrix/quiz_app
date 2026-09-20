@@ -30,12 +30,14 @@ export type AttemptAvgAggregateOutputType = {
   score: number | null
   correctCount: number | null
   wrongCount: number | null
+  totalQuestions: number | null
 }
 
 export type AttemptSumAggregateOutputType = {
   score: number | null
   correctCount: number | null
   wrongCount: number | null
+  totalQuestions: number | null
 }
 
 export type AttemptMinAggregateOutputType = {
@@ -43,6 +45,7 @@ export type AttemptMinAggregateOutputType = {
   score: number | null
   correctCount: number | null
   wrongCount: number | null
+  totalQuestions: number | null
   createdAt: Date | null
 }
 
@@ -51,6 +54,7 @@ export type AttemptMaxAggregateOutputType = {
   score: number | null
   correctCount: number | null
   wrongCount: number | null
+  totalQuestions: number | null
   createdAt: Date | null
 }
 
@@ -59,6 +63,7 @@ export type AttemptCountAggregateOutputType = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions: number
   createdAt: number
   _all: number
 }
@@ -68,12 +73,14 @@ export type AttemptAvgAggregateInputType = {
   score?: true
   correctCount?: true
   wrongCount?: true
+  totalQuestions?: true
 }
 
 export type AttemptSumAggregateInputType = {
   score?: true
   correctCount?: true
   wrongCount?: true
+  totalQuestions?: true
 }
 
 export type AttemptMinAggregateInputType = {
@@ -81,6 +88,7 @@ export type AttemptMinAggregateInputType = {
   score?: true
   correctCount?: true
   wrongCount?: true
+  totalQuestions?: true
   createdAt?: true
 }
 
@@ -89,6 +97,7 @@ export type AttemptMaxAggregateInputType = {
   score?: true
   correctCount?: true
   wrongCount?: true
+  totalQuestions?: true
   createdAt?: true
 }
 
@@ -97,6 +106,7 @@ export type AttemptCountAggregateInputType = {
   score?: true
   correctCount?: true
   wrongCount?: true
+  totalQuestions?: true
   createdAt?: true
   _all?: true
 }
@@ -192,6 +202,7 @@ export type AttemptGroupByOutputType = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions: number
   createdAt: Date
   _count: AttemptCountAggregateOutputType | null
   _avg: AttemptAvgAggregateOutputType | null
@@ -223,6 +234,7 @@ export type AttemptWhereInput = {
   score?: Prisma.IntFilter<"Attempt"> | number
   correctCount?: Prisma.IntFilter<"Attempt"> | number
   wrongCount?: Prisma.IntFilter<"Attempt"> | number
+  totalQuestions?: Prisma.IntFilter<"Attempt"> | number
   createdAt?: Prisma.DateTimeFilter<"Attempt"> | Date | string
   answers?: Prisma.AttemptAnswerListRelationFilter
 }
@@ -232,6 +244,7 @@ export type AttemptOrderByWithRelationInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   answers?: Prisma.AttemptAnswerOrderByRelationAggregateInput
 }
@@ -244,6 +257,7 @@ export type AttemptWhereUniqueInput = Prisma.AtLeast<{
   score?: Prisma.IntFilter<"Attempt"> | number
   correctCount?: Prisma.IntFilter<"Attempt"> | number
   wrongCount?: Prisma.IntFilter<"Attempt"> | number
+  totalQuestions?: Prisma.IntFilter<"Attempt"> | number
   createdAt?: Prisma.DateTimeFilter<"Attempt"> | Date | string
   answers?: Prisma.AttemptAnswerListRelationFilter
 }, "id">
@@ -253,6 +267,7 @@ export type AttemptOrderByWithAggregationInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.AttemptCountOrderByAggregateInput
   _avg?: Prisma.AttemptAvgOrderByAggregateInput
@@ -269,6 +284,7 @@ export type AttemptScalarWhereWithAggregatesInput = {
   score?: Prisma.IntWithAggregatesFilter<"Attempt"> | number
   correctCount?: Prisma.IntWithAggregatesFilter<"Attempt"> | number
   wrongCount?: Prisma.IntWithAggregatesFilter<"Attempt"> | number
+  totalQuestions?: Prisma.IntWithAggregatesFilter<"Attempt"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Attempt"> | Date | string
 }
 
@@ -277,6 +293,7 @@ export type AttemptCreateInput = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions?: number
   createdAt?: Date | string
   answers?: Prisma.AttemptAnswerCreateNestedManyWithoutAttemptInput
 }
@@ -286,6 +303,7 @@ export type AttemptUncheckedCreateInput = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions?: number
   createdAt?: Date | string
   answers?: Prisma.AttemptAnswerUncheckedCreateNestedManyWithoutAttemptInput
 }
@@ -295,6 +313,7 @@ export type AttemptUpdateInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answers?: Prisma.AttemptAnswerUpdateManyWithoutAttemptNestedInput
 }
@@ -304,6 +323,7 @@ export type AttemptUncheckedUpdateInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answers?: Prisma.AttemptAnswerUncheckedUpdateManyWithoutAttemptNestedInput
 }
@@ -313,6 +333,7 @@ export type AttemptCreateManyInput = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions?: number
   createdAt?: Date | string
 }
 
@@ -321,6 +342,7 @@ export type AttemptUpdateManyMutationInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -329,6 +351,7 @@ export type AttemptUncheckedUpdateManyInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -337,6 +360,7 @@ export type AttemptCountOrderByAggregateInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -344,6 +368,7 @@ export type AttemptAvgOrderByAggregateInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
 }
 
 export type AttemptMaxOrderByAggregateInput = {
@@ -351,6 +376,7 @@ export type AttemptMaxOrderByAggregateInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -359,6 +385,7 @@ export type AttemptMinOrderByAggregateInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -366,6 +393,7 @@ export type AttemptSumOrderByAggregateInput = {
   score?: Prisma.SortOrder
   correctCount?: Prisma.SortOrder
   wrongCount?: Prisma.SortOrder
+  totalQuestions?: Prisma.SortOrder
 }
 
 export type AttemptScalarRelationFilter = {
@@ -400,6 +428,7 @@ export type AttemptCreateWithoutAnswersInput = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions?: number
   createdAt?: Date | string
 }
 
@@ -408,6 +437,7 @@ export type AttemptUncheckedCreateWithoutAnswersInput = {
   score: number
   correctCount: number
   wrongCount: number
+  totalQuestions?: number
   createdAt?: Date | string
 }
 
@@ -432,6 +462,7 @@ export type AttemptUpdateWithoutAnswersInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -440,6 +471,7 @@ export type AttemptUncheckedUpdateWithoutAnswersInput = {
   score?: Prisma.IntFieldUpdateOperationsInput | number
   correctCount?: Prisma.IntFieldUpdateOperationsInput | number
   wrongCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -479,6 +511,7 @@ export type AttemptSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   score?: boolean
   correctCount?: boolean
   wrongCount?: boolean
+  totalQuestions?: boolean
   createdAt?: boolean
   answers?: boolean | Prisma.Attempt$answersArgs<ExtArgs>
   _count?: boolean | Prisma.AttemptCountOutputTypeDefaultArgs<ExtArgs>
@@ -489,6 +522,7 @@ export type AttemptSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   score?: boolean
   correctCount?: boolean
   wrongCount?: boolean
+  totalQuestions?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["attempt"]>
 
@@ -497,6 +531,7 @@ export type AttemptSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   score?: boolean
   correctCount?: boolean
   wrongCount?: boolean
+  totalQuestions?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["attempt"]>
 
@@ -505,10 +540,11 @@ export type AttemptSelectScalar = {
   score?: boolean
   correctCount?: boolean
   wrongCount?: boolean
+  totalQuestions?: boolean
   createdAt?: boolean
 }
 
-export type AttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "score" | "correctCount" | "wrongCount" | "createdAt", ExtArgs["result"]["attempt"]>
+export type AttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "score" | "correctCount" | "wrongCount" | "totalQuestions" | "createdAt", ExtArgs["result"]["attempt"]>
 export type AttemptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   answers?: boolean | Prisma.Attempt$answersArgs<ExtArgs>
   _count?: boolean | Prisma.AttemptCountOutputTypeDefaultArgs<ExtArgs>
@@ -526,6 +562,7 @@ export type $AttemptPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     score: number
     correctCount: number
     wrongCount: number
+    totalQuestions: number
     createdAt: Date
   }, ExtArgs["result"]["attempt"]>
   composites: {}
@@ -955,6 +992,7 @@ export interface AttemptFieldRefs {
   readonly score: Prisma.FieldRef<"Attempt", 'Int'>
   readonly correctCount: Prisma.FieldRef<"Attempt", 'Int'>
   readonly wrongCount: Prisma.FieldRef<"Attempt", 'Int'>
+  readonly totalQuestions: Prisma.FieldRef<"Attempt", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Attempt", 'DateTime'>
 }
     

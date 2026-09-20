@@ -98,6 +98,7 @@ export const AttemptScalarFieldEnum = {
   score: 'score',
   correctCount: 'correctCount',
   wrongCount: 'wrongCount',
+  totalQuestions: 'totalQuestions',
   createdAt: 'createdAt'
 } as const
 

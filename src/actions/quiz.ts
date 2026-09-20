@@ -88,16 +88,18 @@ export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult>
 
   const correctCount = checkedAnswers.filter((answer) => answer.isCorrect).length;
   const wrongCount = checkedAnswers.length - correctCount;
-  // Scoring is intentionally allowed to go below zero.
-  const score =
+  const score = Math.max(
+    0,
     correctCount * quizSettings.pointsForCorrectAnswer +
-    wrongCount * quizSettings.pointsForWrongAnswer;
+      wrongCount * quizSettings.pointsForWrongAnswer,
+  );
 
   const attempt = await prisma.attempt.create({
     data: {
       score,
       correctCount,
       wrongCount,
+      totalQuestions: quizSettings.questionCount,
       answers: {
         create: checkedAnswers.map((answer) => ({
           questionId: answer.question.id,

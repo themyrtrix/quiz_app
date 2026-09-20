@@ -2,14 +2,26 @@
 
 // Renders the start, question, and results screens for QuizMart.
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import Link from "next/link";
 import { submitQuiz, type QuizResult } from "@/actions/quiz";
 import { quizSettings, quizText } from "@/config";
+import { QuizReview } from "@/components/quiz/QuizReview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export type QuizQuestion = {
   id: string;
@@ -25,81 +37,68 @@ type QuizClientProps = {
 };
 
 type Screen = "start" | "quiz" | "results";
-type ResultsFilter = "all" | "wrong";
+function shuffle<T>(items: T[]) {
+  const copy = [...items];
 
-const titleTileClasses = [
-  "quiz-title-tile-blue -rotate-6",
-  "quiz-title-tile-yellow rotate-3",
-  "quiz-title-tile-white -rotate-2",
-  "quiz-title-tile-blue rotate-6",
-  "quiz-title-tile-yellow -rotate-3",
-  "quiz-title-tile-white rotate-2",
-  "quiz-title-tile-blue -rotate-4",
-  "quiz-title-tile-yellow rotate-5",
-];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
 
-function formatScore(score: number) {
-  // Negative scores use the true minus sign requested in the spec.
-  return `${score < 0 ? `−${Math.abs(score)}` : score} points`;
+  return copy;
+}
+
+function shuffleQuizQuestions(questions: QuizQuestion[]) {
+  return shuffle(questions).map((question) => ({
+    ...question,
+    choices: shuffle(question.choices),
+  }));
+}
+
+function formatScore(score: number, totalQuestions: number) {
+  return `${score} / ${totalQuestions} points`;
 }
 
 function QuizTitle() {
-  return (
-    <h1 className="flex flex-wrap justify-center gap-2 text-5xl font-black sm:text-7xl" aria-label={quizText.title}>
-      {quizText.title.toUpperCase().split("").map((letter, index) => (
-        <span
-          className={cn("quiz-title-tile", titleTileClasses[index % titleTileClasses.length])}
-          key={`${letter}-${index}`}
-          aria-hidden="true"
-        >
-          {letter}
-        </span>
-      ))}
-    </h1>
-  );
+  return <h1 className="quiz-wordmark" aria-label={quizText.title}>Quiz<span>Mart</span></h1>;
 }
 
 export function QuizClient({ questions }: QuizClientProps) {
+  const [quizQuestions, setQuizQuestions] = useState(() => shuffleQuizQuestions(questions));
   const [screen, setScreen] = useState<Screen>("start");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [draftAnswers, setDraftAnswers] = useState<Record<string, string>>({});
   const [lockedAnswers, setLockedAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
-  const [resultsFilter, setResultsFilter] = useState<ResultsFilter>("all");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = quizQuestions[currentIndex];
   const currentLockedChoiceId = currentQuestion ? lockedAnswers[currentQuestion.id] : undefined;
   const currentDraftChoiceId = currentQuestion ? draftAnswers[currentQuestion.id] : undefined;
   const currentChoiceId = currentLockedChoiceId ?? currentDraftChoiceId ?? "";
   const lockedCount = Object.keys(lockedAnswers).length;
   // EDIT: progress math lives here if you want a different progress behavior later.
   const progressValue = (lockedCount / quizSettings.questionCount) * 100;
-  const isLastQuestion = currentIndex === questions.length - 1;
+  const isLastQuestion = currentIndex === quizQuestions.length - 1;
   const canContinue = Boolean(currentChoiceId) && !isPending;
 
-  const visibleResultQuestions = useMemo(() => {
-    if (!result) {
-      return [];
-    }
-
-    return resultsFilter === "wrong"
-      ? result.questions.filter((question) => !question.isCorrect)
-      : result.questions;
-  }, [result, resultsFilter]);
-
   function resetQuiz() {
+    setQuizQuestions(shuffleQuizQuestions(questions));
     setScreen("start");
     setCurrentIndex(0);
     setDraftAnswers({});
     setLockedAnswers({});
     setResult(null);
-    setResultsFilter("all");
     setErrorMessage("");
   }
 
+  function exitQuiz() {
+    resetQuiz();
+  }
+
   function handleStart() {
+    setQuizQuestions(shuffleQuizQuestions(questions));
     setScreen("quiz");
   }
 
@@ -115,7 +114,7 @@ export function QuizClient({ questions }: QuizClientProps) {
   }
 
   function buildSubmission(nextLockedAnswers: Record<string, string>) {
-    return questions.map((question) => ({
+    return quizQuestions.map((question) => ({
       questionId: question.id,
       choiceId: nextLockedAnswers[question.id],
     }));
@@ -163,16 +162,15 @@ export function QuizClient({ questions }: QuizClientProps) {
     setErrorMessage("");
   }
 
-  if (questions.length === 0) {
+  if (quizQuestions.length === 0) {
     return (
       <main className="quiz-shell">
         <Card className="quiz-card max-w-xl">
           <CardContent className="space-y-4 text-center">
             <QuizTitle />
-            <p className="text-lg font-bold">No questions found. Run the migration and seed scripts.</p>
+            <p className="text-lg font-semibold">No questions found. Run the migration and seed scripts.</p>
           </CardContent>
         </Card>
-        <footer className="quiz-footer">{quizText.footerCredit}</footer>
       </main>
     );
   }
@@ -180,16 +178,22 @@ export function QuizClient({ questions }: QuizClientProps) {
   if (screen === "start") {
     return (
       <main className="quiz-shell">
-        <section className="flex flex-col items-center gap-7 text-center">
+        <section className="quiz-landing">
+          <p className="quiz-eyebrow">A quick knowledge challenge</p>
           <QuizTitle />
-          <p className="max-w-md text-2xl font-extrabold text-[var(--quiz-navy)] dark:text-[var(--quiz-dark-text)]">
+          <p className="quiz-tagline">
             {quizText.tagline}
           </p>
-          <Button className="quiz-button quiz-button-yellow text-xl" onClick={handleStart}>
+          <p className="quiz-intro">
+            Answer {quizSettings.questionCount} multiple-choice questions. Your score is revealed at the end.
+          </p>
+          <Button className="quiz-button quiz-button-blue text-base" onClick={handleStart}>
             {quizText.startButton}
           </Button>
+          <Button className="quiz-button quiz-button-white" asChild>
+            <Link href="/history">{quizText.historyButton}</Link>
+          </Button>
         </section>
-        <footer className="quiz-footer">{quizText.footerCredit}</footer>
       </main>
     );
   }
@@ -199,9 +203,9 @@ export function QuizClient({ questions }: QuizClientProps) {
       <main className="quiz-shell">
         <Card className="quiz-card w-full max-w-4xl">
           <CardContent className="space-y-7">
-            <div className="space-y-3 text-center">
+            <div className="space-y-3">
               <QuizTitle />
-              <h2 className="text-3xl font-black text-[var(--quiz-navy)] dark:text-[var(--quiz-dark-text)]">
+              <h2 className="text-3xl font-semibold text-(--quiz-page-text)">
                 {quizText.resultsHeading}
               </h2>
             </div>
@@ -209,7 +213,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="quiz-stat">
                 <span>{quizText.totalScoreLabel}</span>
-                <strong>{formatScore(result.score)}</strong>
+                <strong>{formatScore(result.score, quizSettings.questionCount)}</strong>
               </div>
               <div className="quiz-stat quiz-stat-correct">
                 <span>{quizText.correctCountLabel}</span>
@@ -221,57 +225,18 @@ export function QuizClient({ questions }: QuizClientProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-3" aria-label="Results filter">
-              <Button
-                className={cn("quiz-toggle", resultsFilter === "all" && "quiz-toggle-active")}
-                type="button"
-                variant="outline"
-                onClick={() => setResultsFilter("all")}
-              >
-                {quizText.allQuestionsToggle}
-              </Button>
-              <Button
-                className={cn("quiz-toggle", resultsFilter === "wrong" && "quiz-toggle-active")}
-                type="button"
-                variant="outline"
-                onClick={() => setResultsFilter("wrong")}
-              >
-                {quizText.wrongOnlyToggle}
-              </Button>
-            </div>
+            <QuizReview questions={result.questions} />
 
-            <div className="space-y-4">
-              {visibleResultQuestions.length === 0 ? (
-                <p className="rounded-[var(--quiz-radius)] border-[3px] border-[var(--quiz-navy)] bg-white p-4 text-center font-extrabold shadow-[var(--quiz-small-shadow)] dark:border-[var(--quiz-dark-border)] dark:bg-[var(--quiz-dark-card)]">
-                  {quizText.noWrongAnswers}
-                </p>
-              ) : (
-                visibleResultQuestions.map((question, index) => (
-                  <article className="quiz-result-row" key={question.questionId}>
-                    <h3>
-                      {index + 1}. {question.questionText}
-                    </h3>
-                    <p className="quiz-answer-correct">
-                      <span>{quizText.correctAnswerLabel}:</span> {question.correctAnswerText}
-                    </p>
-                    {!question.isCorrect ? (
-                      <p className="quiz-answer-wrong">
-                        <span>{quizText.yourAnswerLabel}:</span> {question.userAnswerText}
-                      </p>
-                    ) : null}
-                  </article>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-center">
-              <Button className="quiz-button quiz-button-yellow text-lg" onClick={resetQuiz}>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button className="quiz-button quiz-button-blue text-base" onClick={resetQuiz}>
                 {quizText.playAgainButton}
+              </Button>
+              <Button className="quiz-button quiz-button-white" asChild>
+                <Link href="/history">{quizText.viewHistoryButton}</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
-        <footer className="quiz-footer">{quizText.footerCredit}</footer>
       </main>
     );
   }
@@ -280,20 +245,50 @@ export function QuizClient({ questions }: QuizClientProps) {
     <main className="quiz-shell">
       <Card className="quiz-card w-full max-w-3xl">
         <CardContent className="space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Progress
-              aria-label="Quiz progress"
-              className="quiz-progress"
-              value={progressValue}
-            />
-            <span className="shrink-0 text-center text-lg font-black text-[var(--quiz-navy)] dark:text-[var(--quiz-dark-text)]">
-              {quizText.questionLabel} {currentIndex + 1} / {quizSettings.questionCount}
-            </span>
+        <div className="quiz-progress-header">
+          <div>
+            <p className="quiz-eyebrow">{quizText.questionLabel}</p>
+            <p className="quiz-progress-count">
+              {currentIndex + 1} <span>of {quizSettings.questionCount}</span>
+            </p>
           </div>
+          <p className="quiz-progress-status">{lockedCount} {quizText.answeredLabel}</p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button className="quiz-button quiz-button-white quiz-exit-button" type="button">
+                <span aria-hidden="true">✕</span> {quizText.exitButton}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{quizText.leaveQuizTitle}</AlertDialogTitle>
+                <AlertDialogDescription>{quizText.leaveQuizMessage}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>
+                  <Button className="quiz-button quiz-button-white" type="button">{quizText.keepGoingButton}</Button>
+                </AlertDialogCancel>
+                <AlertDialogAction>
+                  <Button className="quiz-button quiz-button-blue" type="button" onClick={exitQuiz}>{quizText.exitQuizButton}</Button>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <div className="quiz-progress-wrap">
+          <Progress
+            aria-label={`Quiz progress: ${lockedCount} of ${quizSettings.questionCount} answered`}
+            className="quiz-progress"
+            value={progressValue}
+          />
+        </div>
 
           <div className="quiz-question-box">
             <h2>{currentQuestion.text}</h2>
           </div>
+          <p className="quiz-question-hint">
+            {quizText.questionHint}
+          </p>
 
           <RadioGroup
             className="gap-3"
@@ -304,7 +299,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             {currentQuestion.choices.map((choice) => (
               <label className="quiz-choice" key={choice.id}>
                 <RadioGroupItem className="quiz-radio" value={choice.id} />
-                <span>{choice.text}</span>
+                <span className="quiz-choice-text">{choice.text}</span>
               </label>
             ))}
           </RadioGroup>
@@ -331,7 +326,6 @@ export function QuizClient({ questions }: QuizClientProps) {
           </Button>
         </CardFooter>
       </Card>
-      <footer className="quiz-footer">{quizText.footerCredit}</footer>
     </main>
   );
 }

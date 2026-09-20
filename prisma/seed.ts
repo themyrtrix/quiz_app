@@ -1,8 +1,8 @@
-// Loads QuizMart questions from Open Trivia DB, falling back to local sample data.
+// Loads QuizMart questions from a local JSON file, with Open Trivia available as an opt-in source.
 
 import "dotenv/config";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { resolve } from "node:path";
 import { decode } from "html-entities";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -12,6 +12,13 @@ type SeedQuestion = {
   text: string;
   choices: string[];
   correctIndex: number;
+};
+
+type QuestionFileItem = {
+  question?: unknown;
+  text?: unknown;
+  choices?: unknown;
+  correctIndex?: unknown;
 };
 
 type OpenTriviaQuestion = {
@@ -42,9 +49,28 @@ function shuffle<T>(items: T[]) {
 }
 
 async function loadFallbackQuestions() {
-  // EDIT: update prisma/questions.json, then run npm run prisma:seed to use new fallback questions.
-  const file = await readFile(join(process.cwd(), "prisma/questions.json"), "utf8");
-  return JSON.parse(file) as SeedQuestion[];
+  // EDIT: replace prisma/questions.json with teacher-provided questions, then run npm run prisma:seed.
+  const questionFile = process.env.QUESTION_FILE ?? "prisma/questions.json";
+  const file = await readFile(resolve(process.cwd(), questionFile), "utf8");
+  const parsed = JSON.parse(file) as unknown;
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(`Question file ${questionFile} must contain a JSON array.`);
+  }
+
+  return parsed.map((item, index) => {
+    if (!item || typeof item !== "object") {
+      throw new Error(`Question ${index + 1} must be an object.`);
+    }
+
+    const question = item as QuestionFileItem;
+
+    return {
+      text: question.question ?? question.text,
+      choices: question.choices,
+      correctIndex: question.correctIndex,
+    } as SeedQuestion;
+  });
 }
 
 async function fetchOpenTriviaQuestions() {
@@ -82,11 +108,19 @@ function validateQuestions(questions: SeedQuestion[]) {
   }
 
   for (const [index, question] of questions.entries()) {
+    if (typeof question.text !== "string" || question.text.trim() === "") {
+      throw new Error(`Question ${index + 1} must have a non-empty question field.`);
+    }
+
+    if (!Array.isArray(question.choices) || question.choices.some((choice) => typeof choice !== "string")) {
+      throw new Error(`Question ${index + 1} must have four string choices.`);
+    }
+
     if (question.choices.length !== 4) {
       throw new Error(`Question ${index + 1} must have exactly four choices.`);
     }
 
-    if (question.correctIndex < 0 || question.correctIndex > 3) {
+    if (!Number.isInteger(question.correctIndex) || question.correctIndex < 0 || question.correctIndex > 3) {
       throw new Error(`Question ${index + 1} has an invalid correctIndex.`);
     }
   }
@@ -95,17 +129,22 @@ function validateQuestions(questions: SeedQuestion[]) {
 async function main() {
   let questions: SeedQuestion[];
 
-  try {
+  if (process.env.USE_OPEN_TRIVIA === "true") {
     // The seed fetches exactly once per run to respect Open Trivia DB's rate limit.
     questions = await fetchOpenTriviaQuestions();
     console.log("Loaded questions from Open Trivia DB.");
-  } catch (error) {
-    console.warn("Open Trivia DB fetch failed. Using prisma/questions.json instead.");
-    console.warn(error);
+  } else {
+    const questionFile = process.env.QUESTION_FILE ?? "prisma/questions.json";
     questions = await loadFallbackQuestions();
+    console.log(`Loaded questions from ${questionFile}.`);
   }
 
   validateQuestions(questions);
+
+  if (process.env.VALIDATE_ONLY === "true") {
+    console.log(`Validated ${questions.length} questions. No database changes made.`);
+    return;
+  }
 
   // Re-seeding starts fresh so edited fallback questions or newly fetched questions replace the old set.
   await prisma.attemptAnswer.deleteMany();

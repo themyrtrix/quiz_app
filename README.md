@@ -1,223 +1,227 @@
-# QuizMart
+# Quizmart
 
-## Overview
+Quizmart is a simple school-style quiz app. A teacher provides a question file, students
+answer the questions, and the app shows the score and answer review at the end.
 
-QuizMart is a simple anonymous multiple-choice quiz app. It loads every question in the local question file, accepts 2-6 choices per question, locks each answer when the player presses Next or Submit, checks answers on the server, saves the attempt, and shows results only at the end.
+## Quick start
 
-## Tech stack
-
-- Next.js 16.3.5 App Router
-- React 19.2.8
-- TypeScript 5
-- Tailwind CSS 4
-- shadcn/ui 4.21.0 components: Button, Card, Progress, RadioGroup
-- Prisma ORM 7.10.0 with Prisma Postgres from the Vercel Marketplace
-- Node.js 24.13.1 locally
-- npm
-
-Prisma 8 is currently shown by Prisma as the newest line, but this project uses Prisma ORM 7.10.0 because it keeps the traditional `schema.prisma`, Prisma Client, migration, and seed workflow used by this app.
-
-## Project structure
-
-```text
-quiz_app/
-├── prisma/
-│   ├── schema.prisma        # Database models: Question, Choice, Attempt, AttemptAnswer.
-│   ├── questions.json       # EDIT: local teacher-provided questions used by default.
-│   ├── seed.ts              # Validates the local question file and imports it manually when needed.
-│   └── check-db.ts          # Checks DATABASE_URL connectivity.
-├── src/
-│   ├── actions/quiz.ts      # Server-side answer checking, scoring, and attempt saving.
-│   ├── app/globals.css      # EDIT: all colors, fonts, theme variables, and shared styles.
-│   ├── app/layout.tsx       # App metadata and Inter font setup.
-│   ├── app/page.tsx         # Loads questions without correct answers and renders QuizMart.
-│   ├── app/history/page.tsx # Server-rendered list of the latest 50 attempts.
-│   ├── app/history/[id]/page.tsx # Server-rendered review for one attempt.
-│   ├── components/quiz/
-│   │   ├── QuizClient.tsx   # Start, quiz, locking, progress, exit, and results UI.
-│   │   └── QuizReview.tsx   # Shared results/history answer review.
-│   ├── components/ui/       # shadcn/ui Button, Card, Progress, RadioGroup, AlertDialog.
-│   ├── config.ts            # EDIT: question count, scoring, and all visible text.
-│   ├── generated/prisma/    # Generated Prisma Client output.
-│   └── lib/prisma.ts        # Lazy Prisma Client helper.
-├── .env.example             # Placeholder DATABASE_URL only.
-├── prisma7.config.ts        # Prisma CLI config, migrations path, seed command, datasource env.
-├── package.json             # npm scripts and dependencies.
-└── README.md                # This guide.
-```
-
-## How the app works
-
-Screen flow:
-
-1. `src/app/page.tsx` automatically checks `prisma/questions.json`, synchronizes changed questions into the active database bank without deleting history, then loads questions and choices without selecting `Choice.isCorrect`.
-2. `src/components/quiz/QuizClient.tsx` shows Start, then each question, then Results.
-3. `src/actions/quiz.ts` checks submitted answers on the server and returns correct answers only for the results screen.
-4. `/history` lists the latest 50 saved attempts, and `/history/[id]` shows a saved review.
-
-Quiz rules and where they live:
-
-- One attempt per question: `QuizClient.tsx` copies a draft answer into `lockedAnswers` only when Next or Submit is pressed.
-- No feedback during quiz: `page.tsx` never sends `isCorrect`, and `QuizClient.tsx` does not render correctness before results.
-- Back is review-only: `QuizClient.tsx` disables the RadioGroup for locked answers.
-- Progress advances only on Next/Submit: `QuizClient.tsx` calculates progress from locked answers.
-- Questions and choices are shuffled for every new quiz page load; correct answers remain server-only.
-- Scoring is one point per correct answer and zero points per wrong answer: `src/actions/quiz.ts` uses `src/config.ts` scoring settings. The score equals the correct-answer count and cannot be negative.
-- Correct answers are server-only during the quiz: `src/actions/quiz.ts` is the only quiz path that reads `Choice.isCorrect`.
-- Exit opens an accessible confirmation dialog and resets the in-progress quiz without saving an attempt.
-
-## Database
-
-- `Question`: stores the question text.
-- `Choice`: stores each question's 2-6 choices and the private `isCorrect` flag.
-- `Attempt`: stores anonymous attempt score, correct count, wrong count, total questions, and date/time.
-- `AttemptAnswer`: stores each chosen answer, linked to its attempt, question, and choice.
-
-Reads:
-
-- `src/app/page.tsx` reads questions and choices for the quiz, excluding correct answers.
-
-Writes:
-
-- `prisma/seed.ts` clears old quiz data and inserts a fresh set of questions and choices.
-- `src/actions/quiz.ts` creates one `Attempt` and the related `AttemptAnswer` rows after Submit.
-
-## Routes
-
-- `/`: Start, quiz, and results flow.
-- `/history`: Latest 50 attempts, newest first.
-- `/history/[id]`: Detailed review of one saved attempt.
-
-## Setup and run
-
-Install dependencies:
+### 1. Start the app
 
 ```bash
 npm install
+npm run dev
 ```
 
-Create local env:
-
-```bash
-cp .env.example .env
-```
-
-Vercel's Prisma Marketplace integration creates exactly this variable on the connected Vercel project:
+Open the local address shown in the terminal, usually:
 
 ```text
-DATABASE_URL
+http://localhost:3000
 ```
 
-It is a Prisma Postgres URL beginning with `postgres://...`. Paste that real value into local `.env`:
+### 2. Change the questions
 
-```env
-DATABASE_URL="postgres://..."
+Replace this file:
+
+```text
+prisma/questions.json
 ```
 
-Never commit `.env` or share the real database URL.
+Then refresh the Quizmart homepage. The app automatically reads the file and updates the
+active question bank. You do not normally need to run a seed command.
 
-Generate Prisma Client:
+The app accepts any number of questions. Each question must have between 2 and 6 answer
+choices.
 
-```bash
-npm run prisma:generate
-```
-
-Create and apply the initial migration locally against the hosted Prisma Postgres database:
-
-```bash
-npm run prisma:migrate -- --name init
-```
-
-The app automatically reads `prisma/questions.json` when the home page loads. When the file changes,
-the active question bank is replaced while saved attempts remain available in History. The importer
-recognizes common JSON field names, nested question arrays, and CSV files.
-
-To manually validate the local file without changing the database:
-
-```bash
-VALIDATE_ONLY=true npm run prisma:seed
-```
-
-The importer accepts JSON arrays or nested `questions`, `items`, `results`, or `data` arrays.
-It recognizes common field names:
-
-- Question: `question`, `text`, `prompt`, or `title`
-- Choices: `choices`, `options`, `answers`, or `alternatives`
-- Correct answer: a zero-based `correctIndex`, or the answer text in
-  `correctAnswer`, `correct`, or `answer`
-
-CSV files are also accepted. Use headers such as `question,options,correctAnswer`; put
-multiple choices in the options cell separated by `|`. The imported set can contain any number of questions, and each question must have between
-2 and 6 choices.
-
-For example, this JSON works:
+Example:
 
 ```json
 [
   {
-    "prompt": "What is 2 + 2?",
-    "options": ["3", "4", "5", "6"],
-    "correctAnswer": "4"
+    "question": "What is 2 + 2?",
+    "choices": ["3", "4", "5", "6"],
+    "correctIndex": 1
   }
 ]
 ```
 
-The normal seed command is retained for a deliberate database reset and deletes attempts.
-You do not need to run it for ordinary teacher-file updates.
+Common alternatives are also accepted:
 
-Check the database connection:
+- Question text: `question`, `text`, `prompt`, or `title`
+- Choices: `choices`, `options`, `answers`, or `alternatives`
+- Correct answer: `correctIndex`, `correctAnswer`, `correct`, or `answer`
+- Questions may be inside `questions`, `items`, `results`, or `data`
 
-```bash
-npm run db:check
+If the teacher gives a file with a different structure, try replacing the contents of
+`prisma/questions.json` and refresh the homepage. If it does not load, keep the error
+message and adjust the importer in `src/lib/question-file.ts`.
+
+### 3. Test from a clean history
+
+The History page is at:
+
+```text
+http://localhost:3000/history
 ```
 
-Run locally:
+Normal quiz attempts are saved there. To clear test history while keeping the questions,
+run this only when you intentionally want a clean test database:
 
 ```bash
-npm run dev
+node -r dotenv/config - <<'NODE'
+const { Client } = require("pg");
+(async () => {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  await client.query("BEGIN");
+  await client.query('DELETE FROM "AttemptAnswer"');
+  await client.query('DELETE FROM "Attempt"');
+  await client.query("COMMIT");
+  await client.end();
+  console.log("Quiz history cleared.");
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+NODE
 ```
 
-Open `http://localhost:3000`.
+## What students experience
 
-Deploy to Vercel:
+1. The Start screen has Start and History buttons.
+2. Questions and choices are shuffled for each new quiz.
+3. Selecting an answer and pressing Next locks that answer.
+4. The selected answer row turns green or red after it is checked.
+5. The student presses Continue to move on.
+6. Submit saves the attempt and shows the final score.
+7. History contains the saved attempt and its answer review.
+8. Exit asks for confirmation and does not save the unfinished quiz.
 
-```bash
-git add .
-git commit -m "Build QuizMart"
-git push
+## Scoring
+
+- Correct answer: 1 point
+- Wrong answer: 0 points
+- Score: number of correct answers
+- Score can never be negative
+
+The score is shown against the actual number of uploaded questions, for example:
+
+```text
+8 / 12 points
 ```
 
-In Vercel, import the GitHub repo, open Storage, create a Prisma Postgres database from the Marketplace, and connect it to the project. Redeploy after `DATABASE_URL` is added. For production schema setup, run:
+## Main pages
 
-```bash
-npm run prisma:deploy
-npm run prisma:seed
+- `/` — start screen, quiz, and results
+- `/history` — latest saved attempts
+- `/history/[id]` — review of one saved attempt
+
+## Simple project map
+
+```text
+prisma/questions.json       Questions supplied by the teacher
+src/config.ts               App text and scoring settings
+src/app/page.tsx            Homepage and active question loading
+src/app/history/            History pages
+src/actions/quiz.ts         Server-side answer checking and saving
+src/lib/question-file.ts    Flexible question-file reader
+src/lib/question-bank.ts    Automatic question-bank update
+src/components/quiz/        Quiz, results, and review screens
+src/components/ui/          Reusable shadcn UI components
+src/app/globals.css         Colors, typography, and visual design
+prisma/schema.prisma        Database structure
 ```
 
 ## Where to edit things
 
-- I want to change the visible text, so edit `src/config.ts`.
-- I want to change the number of questions or choices, so replace `prisma/questions.json`; the app uses every question and accepts 2-6 choices per question.
-- I want to change scoring, so edit `pointsForCorrectAnswer` and `pointsForWrongAnswer` in `src/config.ts`; use `1` and `0` for one point per correct answer with no deduction for mistakes.
-- I want to change colors or fonts, so edit the CSS variables at the top of `src/app/globals.css`.
-- I want to change quiz questions, so replace `prisma/questions.json`; the app imports the new bank automatically on the next home-page load.
-- I want to change the quiz UI, so start in `src/components/quiz/QuizClient.tsx`.
-- I want to change the shared results/history review, so edit `src/components/quiz/QuizReview.tsx`.
-- I want to change history pages, so edit `src/app/history/page.tsx` or `src/app/history/[id]/page.tsx`.
-- Search for `EDIT:` comments for likely edit points.
+- Change visible wording: `src/config.ts`
+- Change questions: replace `prisma/questions.json`
+- Change scoring: `pointsForCorrectAnswer` and `pointsForWrongAnswer` in `src/config.ts`
+- Change colors and fonts: the variables at the top of `src/app/globals.css`
+- Change quiz behavior: `src/components/quiz/QuizClient.tsx`
+- Change answer checking or saving: `src/actions/quiz.ts`
+- Change flexible file support: `src/lib/question-file.ts`
+- Change automatic question syncing: `src/lib/question-bank.ts`
+
+## Database and safety
+
+Quizmart uses Prisma Postgres. The local `.env` file contains the private `DATABASE_URL`;
+never commit it or share it.
+
+When `questions.json` changes, old questions are archived and new questions become active.
+Existing History attempts are preserved. The app does not use a question API; questions come
+from the local file only.
+
+The correct answer is checked on the server. It is not sent to the browser while the student
+is taking the quiz.
 
 ## Design
 
-QuizMart uses a light-only, formal educational interface. The page uses a white card on a
-very light gray background, slate text, thin borders, moderate 12px corners, and subtle
-shadows. Blue is reserved for primary actions, selected answers, and progress. Correct and
-wrong review states use accessible green and red text/background pairs. Inter is used for
-all headings, body copy, and controls. Update the matched color variables and their `EDIT:`
-comments at the top of `src/app/globals.css`; keep text/background pairs readable when
-changing the palette.
+Quizmart uses a light, formal, educational design:
 
-## Notes for AI assistants
+- White cards on a very light gray background
+- Dark readable text
+- Blue only for primary actions, selected answers, and progress
+- Green for correct answers
+- Red for wrong answers
+- Inter typography
+- Reusable shadcn/Radix UI components
 
-Key files: `src/config.ts`, `src/app/page.tsx`, `src/app/history/page.tsx`, `src/app/history/[id]/page.tsx`, `src/components/quiz/QuizClient.tsx`, `src/components/quiz/QuizReview.tsx`, `src/actions/quiz.ts`, `src/app/globals.css`, `prisma/schema.prisma`, `prisma/seed.ts`.
+## Current project status
 
-Do not break these rules: correct answers must not be sent to the browser during the quiz, answers must be checked on the server in `src/actions/quiz.ts`, answers lock only on Next/Submit, Back is review-only, Exit does not save an attempt, history is read on the server, and scoring is the number of correct answers with no negative totals.
+The project is working and pushed to GitHub. The current implementation includes:
+
+- Flexible local question-file importing
+- Any number of questions
+- 2-6 choices per question
+- Automatic question-bank updates
+- Shuffled questions and choices
+- Server-side answer checking
+- Inline green/red answer feedback
+- Configurable positive-only scoring
+- Saved results and History pages
+- Exit confirmation without saving unfinished quizzes
+- Light formal UI using shadcn-style components
+
+The latest checks pass:
+
+- ESLint
+- TypeScript
+- Production build
+
+## Copyable context for another AI
+
+```text
+This is Quizmart, a Next.js 16 App Router quiz app using React, TypeScript, Tailwind,
+shadcn/Radix UI, Prisma 7, and Prisma Postgres.
+
+The user changes questions by replacing prisma/questions.json. The homepage automatically
+reads the file and updates the active question bank. Existing quiz History must be preserved.
+The importer supports JSON arrays or nested questions/items/results/data arrays, common field
+names such as question/text/prompt/title, choices/options/answers/alternatives, and correct
+answers using correctIndex or answer text. It accepts any number of questions and 2-6 choices
+per question.
+
+Quiz rules:
+- Questions and choices shuffle for every new quiz.
+- Selecting an answer does not lock it until Next is pressed.
+- After Next, the selected row turns green or red based on the server-checked answer.
+- The answer is locked and the user presses Continue to proceed.
+- Submit saves the attempt.
+- Correct answers are worth 1 point; wrong answers are worth 0; score equals correct count.
+- Exit resets the quiz without saving it.
+- History is available at /history and /history/[id].
+
+Important files:
+- src/components/quiz/QuizClient.tsx: quiz state, navigation, feedback, and results
+- src/actions/quiz.ts: server answer checking, scoring, and attempt saving
+- src/lib/question-file.ts: flexible question-file parsing and validation
+- src/lib/question-bank.ts: automatic file-to-database synchronization
+- src/config.ts: visible text and scoring values
+- src/app/globals.css: light theme and visual styles
+- prisma/schema.prisma: database models
+- prisma/questions.json: teacher question file
+
+Do not expose correct answers to the browser during an active quiz. Preserve existing
+attempts when syncing a new question file. Run npm run lint, npm run typecheck, and npm run
+build after code changes.
+```

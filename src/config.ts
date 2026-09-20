@@ -9,7 +9,7 @@ export const quizSettings = {
 
 export const quizText = {
   // EDIT: change the app title and tagline here.
-  title: "QuizMart",
+  title: "Quizmart",
   tagline: "Can your brain handle it?",
   startButton: "Start",
   nextButton: "Next",

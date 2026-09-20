@@ -60,7 +60,7 @@ function formatScore(score: number, totalQuestions: number) {
 }
 
 function QuizTitle() {
-  return <h1 className="quiz-wordmark" aria-label={quizText.title}>Quiz<span>Mart</span></h1>;
+  return <h1 className="quiz-wordmark" aria-label={quizText.title}>Quiz<span>mart</span></h1>;
 }
 
 export function QuizClient({ questions }: QuizClientProps) {
@@ -185,15 +185,14 @@ export function QuizClient({ questions }: QuizClientProps) {
           <p className="quiz-tagline">
             {quizText.tagline}
           </p>
-          <p className="quiz-intro">
-            Answer {totalQuestions} multiple-choice questions. Your score is revealed at the end.
-          </p>
-          <Button className="quiz-button quiz-button-blue text-base" onClick={handleStart}>
-            {quizText.startButton}
-          </Button>
-          <Button className="quiz-button quiz-button-white" asChild>
-            <Link href="/history">{quizText.historyButton}</Link>
-          </Button>
+          <div className="quiz-start-actions">
+            <Button className="quiz-button quiz-button-blue text-base" onClick={handleStart}>
+              {quizText.startButton}
+            </Button>
+            <Button className="quiz-button quiz-button-white" asChild>
+              <Link href="/history">{quizText.historyButton}</Link>
+            </Button>
+          </div>
         </section>
       </main>
     );

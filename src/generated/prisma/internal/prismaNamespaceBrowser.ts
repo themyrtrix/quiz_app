@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Question: 'Question',
+  QuestionBank: 'QuestionBank',
   Choice: 'Choice',
   Attempt: 'Attempt',
   AttemptAnswer: 'AttemptAnswer'
@@ -76,10 +77,20 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const QuestionScalarFieldEnum = {
   id: 'id',
   text: 'text',
+  isActive: 'isActive',
   createdAt: 'createdAt'
 } as const
 
 export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const QuestionBankScalarFieldEnum = {
+  id: 'id',
+  sourceHash: 'sourceHash',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionBankScalarFieldEnum = (typeof QuestionBankScalarFieldEnum)[keyof typeof QuestionBankScalarFieldEnum]
 
 
 export const ChoiceScalarFieldEnum = {

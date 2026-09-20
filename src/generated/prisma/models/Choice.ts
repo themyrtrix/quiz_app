@@ -371,10 +371,6 @@ export type ChoiceUncheckedUpdateManyWithoutQuestionNestedInput = {
   deleteMany?: Prisma.ChoiceScalarWhereInput | Prisma.ChoiceScalarWhereInput[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type ChoiceCreateNestedOneWithoutAttemptAnswersInput = {
   create?: Prisma.XOR<Prisma.ChoiceCreateWithoutAttemptAnswersInput, Prisma.ChoiceUncheckedCreateWithoutAttemptAnswersInput>
   connectOrCreate?: Prisma.ChoiceCreateOrConnectWithoutAttemptAnswersInput

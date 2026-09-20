@@ -3,6 +3,7 @@
 import { QuizClient, type QuizQuestion } from "@/components/quiz/QuizClient";
 import { quizSettings } from "@/config";
 import { getPrisma } from "@/lib/prisma";
+import { syncQuestionBank } from "@/lib/question-bank";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,11 @@ function shuffle<T>(items: T[]) {
 }
 
 async function getQuizQuestions(): Promise<QuizQuestion[]> {
+  await syncQuestionBank();
   const prisma = getPrisma();
   const questions = await prisma.question.findMany({
     take: quizSettings.questionCount,
+    where: { isActive: true },
     select: {
       id: true,
       text: true,

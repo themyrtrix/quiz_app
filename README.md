@@ -24,7 +24,7 @@ quiz_app/
 ├── prisma/
 │   ├── schema.prisma        # Database models: Question, Choice, Attempt, AttemptAnswer.
 │   ├── questions.json       # EDIT: local teacher-provided questions used by default.
-│   ├── seed.ts              # Validates local questions, optionally fetches Open Trivia DB, and seeds DB.
+│   ├── seed.ts              # Validates the local question file and imports it manually when needed.
 │   └── check-db.ts          # Checks DATABASE_URL connectivity.
 ├── src/
 │   ├── actions/quiz.ts      # Server-side answer checking, scoring, and attempt saving.
@@ -50,7 +50,7 @@ quiz_app/
 
 Screen flow:
 
-1. `src/app/page.tsx` loads questions and choices from the database without selecting `Choice.isCorrect`, then shuffles both for each quiz page load.
+1. `src/app/page.tsx` automatically checks `prisma/questions.json`, synchronizes changed questions into the active database bank without deleting history, then loads questions and choices without selecting `Choice.isCorrect`.
 2. `src/components/quiz/QuizClient.tsx` shows Start, then each question, then Results.
 3. `src/actions/quiz.ts` checks submitted answers on the server and returns correct answers only for the results screen.
 4. `/history` lists the latest 50 saved attempts, and `/history/[id]` shows a saved review.
@@ -128,18 +128,14 @@ Create and apply the initial migration locally against the hosted Prisma Postgre
 npm run prisma:migrate -- --name init
 ```
 
-Seed the local question file:
+The app automatically reads `prisma/questions.json` when the home page loads. When the file changes,
+the active question bank is replaced while saved attempts remain available in History. The importer
+recognizes common JSON field names, nested question arrays, and CSV files.
+
+To manually validate the local file without changing the database:
 
 ```bash
-npm run prisma:seed
-```
-
-The default source is `prisma/questions.json`. The app reads the questions saved in Prisma,
-then shuffles their order and choice order whenever a new quiz page loads. To use another
-teacher-provided JSON file:
-
-```bash
-QUESTION_FILE=prisma/teacher-questions.json npm run prisma:seed
+VALIDATE_ONLY=true npm run prisma:seed
 ```
 
 The importer accepts JSON arrays or nested `questions`, `items`, `results`, or `data` arrays.
@@ -166,19 +162,8 @@ For example, this JSON works:
 ]
 ```
 
-Seeding replaces the current question set and deletes existing attempts, so back up any
-attempt data you need before running it. The app does not call Open Trivia DB during quiz
-play. Open Trivia DB is available only when explicitly requested while seeding:
-
-```bash
-USE_OPEN_TRIVIA=true npm run prisma:seed
-```
-
-To check a teacher file before changing the database, run:
-
-```bash
-VALIDATE_ONLY=true QUESTION_FILE=prisma/teacher-questions.json npm run prisma:seed
-```
+The normal seed command is retained for a deliberate database reset and deletes attempts.
+You do not need to run it for ordinary teacher-file updates.
 
 Check the database connection:
 
@@ -215,7 +200,7 @@ npm run prisma:seed
 - I want to change the number of questions, so edit `quizSettings.questionCount` in `src/config.ts`, update `prisma/questions.json`, then run `npm run prisma:seed`.
 - I want to change scoring, so edit `pointsForCorrectAnswer` and `pointsForWrongAnswer` in `src/config.ts`; use `1` and `0` for one point per correct answer with no deduction for mistakes.
 - I want to change colors or fonts, so edit the CSS variables at the top of `src/app/globals.css`.
-- I want to change quiz questions, so replace `prisma/questions.json` or set `QUESTION_FILE` to a teacher-provided JSON file, then run `npm run prisma:seed`.
+- I want to change quiz questions, so replace `prisma/questions.json`; the app imports the new bank automatically on the next home-page load.
 - I want to change the quiz UI, so start in `src/components/quiz/QuizClient.tsx`.
 - I want to change the shared results/history review, so edit `src/components/quiz/QuizReview.tsx`.
 - I want to change history pages, so edit `src/app/history/page.tsx` or `src/app/history/[id]/page.tsx`.

@@ -12,9 +12,16 @@ datasource db {
 model Question {
   id             String          @id @default(cuid())
   text           String
+  isActive       Boolean         @default(true)
   choices        Choice[]
   attemptAnswers AttemptAnswer[]
   createdAt      DateTime        @default(now())
+}
+
+model QuestionBank {
+  id         Int      @id
+  sourceHash String
+  updatedAt  DateTime @updatedAt
 }
 
 model Choice {

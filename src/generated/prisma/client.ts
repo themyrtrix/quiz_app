@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type Question = Prisma.QuestionModel
 /**
+ * Model QuestionBank
+ * 
+ */
+export type QuestionBank = Prisma.QuestionBankModel
+/**
  * Model Choice
  * 
  */

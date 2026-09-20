@@ -401,14 +401,6 @@ export type AttemptScalarRelationFilter = {
   isNot?: Prisma.AttemptWhereInput
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type AttemptCreateNestedOneWithoutAnswersInput = {
   create?: Prisma.XOR<Prisma.AttemptCreateWithoutAnswersInput, Prisma.AttemptUncheckedCreateWithoutAnswersInput>
   connectOrCreate?: Prisma.AttemptCreateOrConnectWithoutAnswersInput

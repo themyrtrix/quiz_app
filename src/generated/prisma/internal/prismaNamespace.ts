@@ -398,6 +398,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Question: 'Question',
+  QuestionBank: 'QuestionBank',
   Choice: 'Choice',
   Attempt: 'Attempt',
   AttemptAnswer: 'AttemptAnswer'
@@ -416,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "question" | "choice" | "attempt" | "attemptAnswer"
+    modelProps: "question" | "questionBank" | "choice" | "attempt" | "attemptAnswer"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -491,6 +492,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.QuestionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.QuestionCountAggregateOutputType> | number
+        }
+      }
+    }
+    QuestionBank: {
+      payload: Prisma.$QuestionBankPayload<ExtArgs>
+      fields: Prisma.QuestionBankFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.QuestionBankFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.QuestionBankFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        findFirst: {
+          args: Prisma.QuestionBankFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.QuestionBankFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        findMany: {
+          args: Prisma.QuestionBankFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>[]
+        }
+        create: {
+          args: Prisma.QuestionBankCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        createMany: {
+          args: Prisma.QuestionBankCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.QuestionBankCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>[]
+        }
+        delete: {
+          args: Prisma.QuestionBankDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        update: {
+          args: Prisma.QuestionBankUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        deleteMany: {
+          args: Prisma.QuestionBankDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.QuestionBankUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.QuestionBankUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>[]
+        }
+        upsert: {
+          args: Prisma.QuestionBankUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionBankPayload>
+        }
+        aggregate: {
+          args: Prisma.QuestionBankAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuestionBank>
+        }
+        groupBy: {
+          args: Prisma.QuestionBankGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionBankGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.QuestionBankCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionBankCountAggregateOutputType> | number
         }
       }
     }
@@ -758,10 +833,20 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const QuestionScalarFieldEnum = {
   id: 'id',
   text: 'text',
+  isActive: 'isActive',
   createdAt: 'createdAt'
 } as const
 
 export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const QuestionBankScalarFieldEnum = {
+  id: 'id',
+  sourceHash: 'sourceHash',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionBankScalarFieldEnum = (typeof QuestionBankScalarFieldEnum)[keyof typeof QuestionBankScalarFieldEnum]
 
 
 export const ChoiceScalarFieldEnum = {
@@ -836,6 +921,13 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -846,13 +938,6 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -1035,6 +1120,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   question?: Prisma.QuestionOmit
+  questionBank?: Prisma.QuestionBankOmit
   choice?: Prisma.ChoiceOmit
   attempt?: Prisma.AttemptOmit
   attemptAnswer?: Prisma.AttemptAnswerOmit

@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Question'
+export type * from './models/QuestionBank'
 export type * from './models/Choice'
 export type * from './models/Attempt'
 export type * from './models/AttemptAnswer'

@@ -345,12 +345,6 @@ a:focus-visible,
   font-size: 0.875rem;
 }
 
-.quiz-answer-feedback {
-  align-self: flex-start;
-  font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-}
-
 .quiz-choice {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -379,6 +373,18 @@ a:focus-visible,
 
 .quiz-choice:has([data-disabled]) {
   cursor: default;
+}
+
+.quiz-choice.quiz-choice-correct {
+  border-color: var(--quiz-correct-border);
+  background: var(--quiz-correct-bg);
+  color: var(--quiz-correct-text);
+}
+
+.quiz-choice.quiz-choice-incorrect {
+  border-color: var(--quiz-wrong-border);
+  background: var(--quiz-wrong-bg);
+  color: var(--quiz-wrong-text);
 }
 
 .quiz-choice-text {

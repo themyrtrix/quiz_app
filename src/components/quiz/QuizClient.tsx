@@ -310,15 +310,6 @@ export function QuizClient({ questions }: QuizClientProps) {
           <p className="quiz-question-hint">
             {quizText.questionHint}
           </p>
-          {answerFeedback !== null ? (
-            <Badge
-              className="quiz-answer-feedback"
-              variant={answerFeedback ? "success" : "destructive"}
-            >
-              {answerFeedback ? quizText.correctFeedback : quizText.wrongFeedback}
-            </Badge>
-          ) : null}
-
           <RadioGroup
             className="gap-3"
             disabled={Boolean(currentLockedChoiceId) || isPending}
@@ -326,7 +317,16 @@ export function QuizClient({ questions }: QuizClientProps) {
             value={currentChoiceId}
           >
             {currentQuestion.choices.map((choice) => (
-              <label className="quiz-choice" key={choice.id}>
+              <label
+                className={`quiz-choice ${
+                  answerFeedback !== null && choice.id === currentChoiceId
+                    ? answerFeedback
+                      ? "quiz-choice-correct"
+                      : "quiz-choice-incorrect"
+                    : ""
+                }`}
+                key={choice.id}
+              >
                 <RadioGroupItem className="quiz-radio" value={choice.id} />
                 <span className="quiz-choice-text">{choice.text}</span>
               </label>

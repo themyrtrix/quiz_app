@@ -15,8 +15,6 @@ export const quizText = {
   nextButton: "Next",
   submitButton: "Submit",
   continueButton: "Continue",
-  correctFeedback: "Correct!",
-  wrongFeedback: "Not quite.",
   exitButton: "Exit",
   questionHint: "One try per question. Your answer locks when you press Next.",
   answeredLabel: "answered",

@@ -7,10 +7,12 @@ import Link from "next/link";
 import { submitQuiz, type QuizResult } from "@/actions/quiz";
 import { quizText } from "@/config";
 import { QuizReview } from "@/components/quiz/QuizReview";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -252,7 +254,9 @@ export function QuizClient({ questions }: QuizClientProps) {
               {currentIndex + 1} <span>of {totalQuestions}</span>
             </p>
           </div>
-          <p className="quiz-progress-status">{lockedCount} {quizText.answeredLabel}</p>
+          <Badge variant="secondary" className="quiz-progress-status">
+            {lockedCount} {quizText.answeredLabel}
+          </Badge>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button className="quiz-button quiz-button-white quiz-exit-button" type="button">
@@ -275,6 +279,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             </AlertDialogContent>
           </AlertDialog>
         </div>
+        <Separator className="quiz-progress-divider" />
         <div className="quiz-progress-wrap">
           <Progress
             aria-label={`Quiz progress: ${lockedCount} of ${totalQuestions} answered`}

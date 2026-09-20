@@ -5,8 +5,8 @@
 import { useMemo, useState } from "react";
 import type { QuizResultQuestion } from "@/actions/quiz";
 import { quizText } from "@/config";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type QuizReviewProps = {
   questions: QuizResultQuestion[];
@@ -21,24 +21,21 @@ export function QuizReview({ questions }: QuizReviewProps) {
 
   return (
     <>
-      <div className="flex flex-wrap justify-center gap-3" aria-label="Results filter">
-        <Button
-          className={cn("quiz-toggle", filter === "all" && "quiz-toggle-active")}
-          type="button"
-          variant="outline"
-          onClick={() => setFilter("all")}
-        >
+      <ToggleGroup
+        aria-label="Results filter"
+        type="single"
+        value={filter}
+        onValueChange={(value) => {
+          if (value) setFilter(value as "all" | "wrong");
+        }}
+      >
+        <ToggleGroupItem value="all">
           {quizText.allQuestionsToggle}
-        </Button>
-        <Button
-          className={cn("quiz-toggle", filter === "wrong" && "quiz-toggle-active")}
-          type="button"
-          variant="outline"
-          onClick={() => setFilter("wrong")}
-        >
+        </ToggleGroupItem>
+        <ToggleGroupItem value="wrong">
           {quizText.wrongOnlyToggle}
-        </Button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       <div className="space-y-4">
         {visibleQuestions.length === 0 ? (
@@ -51,12 +48,14 @@ export function QuizReview({ questions }: QuizReviewProps) {
               <h3>{index + 1}. {question.questionText}</h3>
               <p className="quiz-answer-correct">
                 <span className="quiz-result-icon">✓</span>
-                <span>{quizText.correctAnswerLabel}:</span> {question.correctAnswerText}
+                <Badge className="mr-1" variant="success">{quizText.correctAnswerLabel}</Badge>
+                {question.correctAnswerText}
               </p>
               {!question.isCorrect ? (
                 <p className="quiz-answer-wrong">
                   <span className="quiz-result-icon">✕</span>
-                  <span>{quizText.yourAnswerLabel}:</span> {question.userAnswerText}
+                  <Badge className="mr-1" variant="destructive">{quizText.yourAnswerLabel}</Badge>
+                  {question.userAnswerText}
                 </p>
               ) : null}
             </article>

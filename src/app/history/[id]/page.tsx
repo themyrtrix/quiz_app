@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { QuizReview } from "@/components/quiz/QuizReview";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
 
@@ -55,10 +57,13 @@ export default async function HistoryDetailPage({ params }: HistoryDetailProps) 
           </div>
           <div>
             <h1 className="text-3xl font-semibold">{quizText.historyHeading}</h1>
-            <p className="mt-2 text-(--quiz-muted-text)">
-              {quizText.totalScoreLabel}: {attempt.score} / {attempt.totalQuestions} points · {attempt.correctCount} {quizText.correctCountLabel.toLowerCase()} · {attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}
-            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-(--quiz-muted-text)">
+              <Badge variant="outline">{quizText.totalScoreLabel}: {attempt.score} / {attempt.totalQuestions} points</Badge>
+              <Badge variant="success">{attempt.correctCount} {quizText.correctCountLabel.toLowerCase()}</Badge>
+              <Badge variant="destructive">{attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}</Badge>
+            </div>
           </div>
+          <Separator />
           <QuizReview questions={questions} />
         </CardContent>
       </Card>

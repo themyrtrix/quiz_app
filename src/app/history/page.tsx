@@ -1,8 +1,10 @@
 // Lists the latest saved QuizMart attempts.
 
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
 
@@ -34,6 +36,7 @@ export default async function HistoryPage() {
               <Link href="/">{quizText.takeQuizButton}</Link>
             </Button>
           </div>
+          <Separator />
 
           {attempts.length === 0 ? (
             <div className="quiz-empty-state">
@@ -47,9 +50,11 @@ export default async function HistoryPage() {
               {attempts.map((attempt) => (
                 <Link className="quiz-history-row" href={`/history/${attempt.id}`} key={attempt.id}>
                   <span>{formatDate(attempt.createdAt)}</span>
-                  <strong>{attempt.score} / {attempt.totalQuestions} points</strong>
-                  <span>{attempt.correctCount} {quizText.correctCountLabel.toLowerCase()}</span>
-                  <span>{attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}</span>
+                  <strong>
+                    <Badge variant="outline">{attempt.score} / {attempt.totalQuestions} points</Badge>
+                  </strong>
+                  <Badge variant="success">{attempt.correctCount} {quizText.correctCountLabel.toLowerCase()}</Badge>
+                  <Badge variant="destructive">{attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}</Badge>
                 </Link>
               ))}
             </div>

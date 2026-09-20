@@ -142,15 +142,26 @@ teacher-provided JSON file:
 QUESTION_FILE=prisma/teacher-questions.json npm run prisma:seed
 ```
 
-The file must contain exactly `questionCount` objects from `src/config.ts`. Each object must
-have a `question` string, exactly four `choices`, and a numeric zero-based `correctIndex`:
+The importer accepts JSON arrays or nested `questions`, `items`, `results`, or `data` arrays.
+It recognizes common field names:
+
+- Question: `question`, `text`, `prompt`, or `title`
+- Choices: `choices`, `options`, `answers`, or `alternatives`
+- Correct answer: a zero-based `correctIndex`, or the answer text in
+  `correctAnswer`, `correct`, or `answer`
+
+CSV files are also accepted. Use headers such as `question,options,correctAnswer`; put
+multiple choices in the options cell separated by `|`. The imported set must still contain
+exactly `questionCount` questions, and each question must have exactly four choices.
+
+For example, this JSON works:
 
 ```json
 [
   {
-    "question": "What is 2 + 2?",
-    "choices": ["3", "4", "5", "6"],
-    "correctIndex": 1
+    "prompt": "What is 2 + 2?",
+    "options": ["3", "4", "5", "6"],
+    "correctAnswer": "4"
   }
 ]
 ```

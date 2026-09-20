@@ -15,10 +15,7 @@ type SeedQuestion = {
 };
 
 type QuestionFileItem = {
-  question?: unknown;
-  text?: unknown;
-  choices?: unknown;
-  correctIndex?: unknown;
+  [key: string]: unknown;
 };
 
 type OpenTriviaQuestion = {
@@ -48,28 +45,118 @@ function shuffle<T>(items: T[]) {
   return copy;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function firstValue(record: Record<string, unknown>, keys: string[]) {
+  const entry = Object.entries(record).find(([key]) => keys.includes(key.toLowerCase()));
+  return entry?.[1];
+}
+
+function parseCsvLine(line: string) {
+  const values: string[] = [];
+  let value = "";
+  let quoted = false;
+
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"' && line[index + 1] === '"') {
+      value += '"';
+      index += 1;
+    } else if (character === '"') {
+      quoted = !quoted;
+    } else if (character === "," && !quoted) {
+      values.push(value.trim());
+      value = "";
+    } else {
+      value += character;
+    }
+  }
+
+  values.push(value.trim());
+  return values;
+}
+
+function parseCsv(content: string) {
+  const lines = content.split(/\r?\n/).filter((line) => line.trim() !== "");
+  if (lines.length < 2) {
+    throw new Error("CSV question files must include a header row and at least one question.");
+  }
+
+  const headers = parseCsvLine(lines[0]).map((header) => header.toLowerCase());
+  return lines.slice(1).map((line) => {
+    const values = parseCsvLine(line);
+    return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
+  });
+}
+
+function findQuestionArray(value: unknown): unknown[] | null {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  const record = asRecord(value);
+  if (!record) {
+    return null;
+  }
+
+  for (const key of ["questions", "items", "results", "data"]) {
+    const nested = findQuestionArray(record[key]);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+function normalizeQuestion(item: QuestionFileItem, index: number): SeedQuestion {
+  const text = firstValue(item, ["question", "text", "prompt", "title"]);
+  const rawChoices = firstValue(item, ["choices", "options", "answers", "alternatives"]);
+  const choices = Array.isArray(rawChoices)
+    ? rawChoices.map((choice) => {
+        const record = asRecord(choice);
+        return typeof choice === "string"
+          ? choice
+          : String(firstValue(record ?? {}, ["text", "answer", "label", "value"]) ?? "");
+      })
+    : typeof rawChoices === "string"
+      ? rawChoices.split("|").map((choice) => choice.trim())
+      : [];
+  const rawCorrect = firstValue(item, ["correctindex", "correctanswer", "correct", "answer"]);
+  const correctIndex = Number.isInteger(Number(rawCorrect))
+    ? Number(rawCorrect)
+    : choices.findIndex((choice) => choice.toLowerCase() === String(rawCorrect).trim().toLowerCase());
+
+  if (typeof text !== "string" || !text.trim()) {
+    throw new Error(`Question ${index + 1} is missing a question, text, prompt, or title field.`);
+  }
+
+  return { text: text.trim(), choices, correctIndex };
+}
+
 async function loadFallbackQuestions() {
   // EDIT: replace prisma/questions.json with teacher-provided questions, then run npm run prisma:seed.
   const questionFile = process.env.QUESTION_FILE ?? "prisma/questions.json";
   const file = await readFile(resolve(process.cwd(), questionFile), "utf8");
-  const parsed = JSON.parse(file) as unknown;
+  const parsed = questionFile.toLowerCase().endsWith(".csv")
+    ? parseCsv(file)
+    : JSON.parse(file) as unknown;
+  const items = findQuestionArray(parsed);
 
-  if (!Array.isArray(parsed)) {
-    throw new Error(`Question file ${questionFile} must contain a JSON array.`);
+  if (!items) {
+    throw new Error(`Question file ${questionFile} must contain an array or a questions/items/results/data array.`);
   }
 
-  return parsed.map((item, index) => {
-    if (!item || typeof item !== "object") {
-      throw new Error(`Question ${index + 1} must be an object.`);
+  return items.map((item, index) => {
+    const record = asRecord(item);
+    if (!record) {
+      throw new Error(`Question ${index + 1} must be an object or CSV row.`);
     }
-
-    const question = item as QuestionFileItem;
-
-    return {
-      text: question.question ?? question.text,
-      choices: question.choices,
-      correctIndex: question.correctIndex,
-    } as SeedQuestion;
+    return normalizeQuestion(record, index);
   });
 }
 

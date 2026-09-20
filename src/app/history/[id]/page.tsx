@@ -47,7 +47,7 @@ export default async function HistoryDetailPage({ params }: HistoryDetailProps) 
         <CardContent className="space-y-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Button className="quiz-button quiz-button-white" asChild>
-              <Link href="/">{quizText.backButton}</Link>
+              <Link href="/history">{quizText.backButton}</Link>
             </Button>
             <Button className="quiz-button quiz-button-blue" asChild>
               <Link href="/">{quizText.takeQuizButton}</Link>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { quizSettings, quizText } from "@/config";
+import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +47,7 @@ export default async function HistoryPage() {
               {attempts.map((attempt) => (
                 <Link className="quiz-history-row" href={`/history/${attempt.id}`} key={attempt.id}>
                   <span>{formatDate(attempt.createdAt)}</span>
-                  <strong>{attempt.score} / {attempt.totalQuestions ?? quizSettings.questionCount} points</strong>
+                  <strong>{attempt.score} / {attempt.totalQuestions} points</strong>
                   <span>{attempt.correctCount} {quizText.correctCountLabel.toLowerCase()}</span>
                   <span>{attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}</span>
                 </Link>

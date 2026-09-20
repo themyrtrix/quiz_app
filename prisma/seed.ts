@@ -3,7 +3,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { quizSettings } from "../src/config";
 import { loadQuestionFile, validateQuestionFile } from "../src/lib/question-file";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -12,7 +11,7 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   const questionFile = "prisma/questions.json";
   const questions = await loadQuestionFile(questionFile);
-  validateQuestionFile(questions, quizSettings.questionCount);
+  validateQuestionFile(questions);
   console.log(`Validated ${questions.length} questions from ${questionFile}.`);
 
   if (process.env.VALIDATE_ONLY === "true") {

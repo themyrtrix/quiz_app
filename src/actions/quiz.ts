@@ -29,8 +29,8 @@ export type QuizResult = {
 export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult> {
   const prisma = getPrisma();
 
-  if (answers.length !== quizSettings.questionCount) {
-    throw new Error(`Please answer all ${quizSettings.questionCount} questions before submitting.`);
+  if (answers.length === 0) {
+    throw new Error("Please answer at least one question before submitting.");
   }
 
   const questionIds = answers.map((answer) => answer.questionId);
@@ -99,7 +99,7 @@ export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult>
       score,
       correctCount,
       wrongCount,
-      totalQuestions: quizSettings.questionCount,
+      totalQuestions: answers.length,
       answers: {
         create: checkedAnswers.map((answer) => ({
           questionId: answer.question.id,

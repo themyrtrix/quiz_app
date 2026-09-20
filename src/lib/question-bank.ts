@@ -2,7 +2,6 @@
 
 import { createHash } from "node:crypto";
 import { getPrisma } from "@/lib/prisma";
-import { quizSettings } from "@/config";
 import { loadQuestionFile, validateQuestionFile } from "@/lib/question-file";
 
 function questionHash(questions: Awaited<ReturnType<typeof loadQuestionFile>>) {
@@ -11,7 +10,7 @@ function questionHash(questions: Awaited<ReturnType<typeof loadQuestionFile>>) {
 
 export async function syncQuestionBank() {
   const questions = await loadQuestionFile();
-  validateQuestionFile(questions, quizSettings.questionCount);
+  validateQuestionFile(questions);
   const sourceHash = questionHash(questions);
   const prisma = getPrisma();
   const bank = await prisma.questionBank.findUnique({ where: { id: 1 } });

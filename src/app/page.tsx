@@ -1,7 +1,6 @@
 // Loads quiz questions without correct answers and renders the QuizMart app.
 
 import { QuizClient, type QuizQuestion } from "@/components/quiz/QuizClient";
-import { quizSettings } from "@/config";
 import { getPrisma } from "@/lib/prisma";
 import { syncQuestionBank } from "@/lib/question-bank";
 
@@ -22,7 +21,6 @@ async function getQuizQuestions(): Promise<QuizQuestion[]> {
   await syncQuestionBank();
   const prisma = getPrisma();
   const questions = await prisma.question.findMany({
-    take: quizSettings.questionCount,
     where: { isActive: true },
     select: {
       id: true,

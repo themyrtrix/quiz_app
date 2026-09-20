@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { QuizReview } from "@/components/quiz/QuizReview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { quizSettings, quizText } from "@/config";
+import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +56,7 @@ export default async function HistoryDetailPage({ params }: HistoryDetailProps) 
           <div>
             <h1 className="text-3xl font-semibold">{quizText.historyHeading}</h1>
             <p className="mt-2 text-(--quiz-muted-text)">
-              {quizText.totalScoreLabel}: {attempt.score} / {attempt.totalQuestions ?? quizSettings.questionCount} points · {attempt.correctCount} {quizText.correctCountLabel.toLowerCase()} · {attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}
+              {quizText.totalScoreLabel}: {attempt.score} / {attempt.totalQuestions} points · {attempt.correctCount} {quizText.correctCountLabel.toLowerCase()} · {attempt.wrongCount} {quizText.wrongCountLabel.toLowerCase()}
             </p>
           </div>
           <QuizReview questions={questions} />

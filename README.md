@@ -2,7 +2,7 @@
 
 ## Overview
 
-QuizMart is a simple anonymous multiple-choice quiz app. It loads 10 questions, locks each answer when the player presses Next or Submit, checks answers on the server, saves the attempt, and shows results only at the end.
+QuizMart is a simple anonymous multiple-choice quiz app. It loads every question in the local question file, accepts 2-6 choices per question, locks each answer when the player presses Next or Submit, checks answers on the server, saves the attempt, and shows results only at the end.
 
 ## Tech stack
 
@@ -69,7 +69,7 @@ Quiz rules and where they live:
 ## Database
 
 - `Question`: stores the question text.
-- `Choice`: stores four choices for each question and the private `isCorrect` flag.
+- `Choice`: stores each question's 2-6 choices and the private `isCorrect` flag.
 - `Attempt`: stores anonymous attempt score, correct count, wrong count, total questions, and date/time.
 - `AttemptAnswer`: stores each chosen answer, linked to its attempt, question, and choice.
 
@@ -147,8 +147,8 @@ It recognizes common field names:
   `correctAnswer`, `correct`, or `answer`
 
 CSV files are also accepted. Use headers such as `question,options,correctAnswer`; put
-multiple choices in the options cell separated by `|`. The imported set must still contain
-exactly `questionCount` questions, and each question must have exactly four choices.
+multiple choices in the options cell separated by `|`. The imported set can contain any number of questions, and each question must have between
+2 and 6 choices.
 
 For example, this JSON works:
 
@@ -197,7 +197,7 @@ npm run prisma:seed
 ## Where to edit things
 
 - I want to change the visible text, so edit `src/config.ts`.
-- I want to change the number of questions, so edit `quizSettings.questionCount` in `src/config.ts`, update `prisma/questions.json`, then run `npm run prisma:seed`.
+- I want to change the number of questions or choices, so replace `prisma/questions.json`; the app uses every question and accepts 2-6 choices per question.
 - I want to change scoring, so edit `pointsForCorrectAnswer` and `pointsForWrongAnswer` in `src/config.ts`; use `1` and `0` for one point per correct answer with no deduction for mistakes.
 - I want to change colors or fonts, so edit the CSS variables at the top of `src/app/globals.css`.
 - I want to change quiz questions, so replace `prisma/questions.json`; the app imports the new bank automatically on the next home-page load.

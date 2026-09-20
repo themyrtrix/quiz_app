@@ -5,7 +5,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { submitQuiz, type QuizResult } from "@/actions/quiz";
-import { quizSettings, quizText } from "@/config";
+import { quizText } from "@/config";
 import { QuizReview } from "@/components/quiz/QuizReview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -79,7 +79,8 @@ export function QuizClient({ questions }: QuizClientProps) {
   const currentChoiceId = currentLockedChoiceId ?? currentDraftChoiceId ?? "";
   const lockedCount = Object.keys(lockedAnswers).length;
   // EDIT: progress math lives here if you want a different progress behavior later.
-  const progressValue = (lockedCount / quizSettings.questionCount) * 100;
+  const totalQuestions = quizQuestions.length;
+  const progressValue = (lockedCount / totalQuestions) * 100;
   const isLastQuestion = currentIndex === quizQuestions.length - 1;
   const canContinue = Boolean(currentChoiceId) && !isPending;
 
@@ -185,7 +186,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             {quizText.tagline}
           </p>
           <p className="quiz-intro">
-            Answer {quizSettings.questionCount} multiple-choice questions. Your score is revealed at the end.
+            Answer {totalQuestions} multiple-choice questions. Your score is revealed at the end.
           </p>
           <Button className="quiz-button quiz-button-blue text-base" onClick={handleStart}>
             {quizText.startButton}
@@ -213,7 +214,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="quiz-stat">
                 <span>{quizText.totalScoreLabel}</span>
-                <strong>{formatScore(result.score, quizSettings.questionCount)}</strong>
+                <strong>{formatScore(result.score, result.questions.length)}</strong>
               </div>
               <div className="quiz-stat quiz-stat-correct">
                 <span>{quizText.correctCountLabel}</span>
@@ -249,7 +250,7 @@ export function QuizClient({ questions }: QuizClientProps) {
           <div>
             <p className="quiz-eyebrow">{quizText.questionLabel}</p>
             <p className="quiz-progress-count">
-              {currentIndex + 1} <span>of {quizSettings.questionCount}</span>
+              {currentIndex + 1} <span>of {totalQuestions}</span>
             </p>
           </div>
           <p className="quiz-progress-status">{lockedCount} {quizText.answeredLabel}</p>
@@ -277,7 +278,7 @@ export function QuizClient({ questions }: QuizClientProps) {
         </div>
         <div className="quiz-progress-wrap">
           <Progress
-            aria-label={`Quiz progress: ${lockedCount} of ${quizSettings.questionCount} answered`}
+            aria-label={`Quiz progress: ${lockedCount} of ${totalQuestions} answered`}
             className="quiz-progress"
             value={progressValue}
           />

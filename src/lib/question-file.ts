@@ -84,10 +84,11 @@ function normalizeQuestion(item: QuestionFileItem, index: number): SeedQuestion 
     : typeof rawChoices === "string"
       ? rawChoices.split("|").map((choice) => choice.trim())
       : [];
-  const rawCorrect = firstValue(item, ["correctindex", "correctanswer", "correct", "answer"]);
-  const correctIndex = Number.isInteger(Number(rawCorrect))
-    ? Number(rawCorrect)
-    : choices.findIndex((choice) => choice.toLowerCase() === String(rawCorrect).trim().toLowerCase());
+  const rawCorrectIndex = firstValue(item, ["correctindex"]);
+  const rawCorrectAnswer = firstValue(item, ["correctanswer", "correct", "answer"]);
+  const correctIndex = rawCorrectIndex !== undefined && Number.isInteger(Number(rawCorrectIndex))
+    ? Number(rawCorrectIndex)
+    : choices.findIndex((choice) => choice.toLowerCase() === String(rawCorrectAnswer).trim().toLowerCase());
 
   if (typeof text !== "string" || !text.trim()) {
     throw new Error(`Question ${index + 1} is missing question text.`);
@@ -111,15 +112,15 @@ export async function loadQuestionFile(fileName = "prisma/questions.json") {
   return questions;
 }
 
-export function validateQuestionFile(questions: SeedQuestion[], expectedCount: number) {
-  if (questions.length !== expectedCount) {
-    throw new Error(`Expected ${expectedCount} questions, found ${questions.length}.`);
+export function validateQuestionFile(questions: SeedQuestion[]) {
+  if (questions.length === 0) {
+    throw new Error("The question file must contain at least one question.");
   }
   for (const [index, question] of questions.entries()) {
-    if (!question.text.trim() || question.choices.length !== 4 ||
+    if (!question.text.trim() || question.choices.length < 2 || question.choices.length > 6 ||
       question.choices.some((choice) => !choice.trim()) ||
-      !Number.isInteger(question.correctIndex) || question.correctIndex < 0 || question.correctIndex > 3) {
-      throw new Error(`Question ${index + 1} must have text, four choices, and a valid correct answer.`);
+      !Number.isInteger(question.correctIndex) || question.correctIndex < 0 || question.correctIndex >= question.choices.length) {
+      throw new Error(`Question ${index + 1} must have text, 2-6 choices, and a valid correct answer.`);
     }
   }
 }

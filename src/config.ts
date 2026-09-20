@@ -1,8 +1,6 @@
 // Stores the QuizMart settings and visible text that are easiest to edit later.
 
 export const quizSettings = {
-  // EDIT: change the number of questions shown in each quiz here.
-  questionCount: 10,
   // EDIT: change the points awarded for each correct answer here.
   pointsForCorrectAnswer: 1,
   // EDIT: change the points awarded for each wrong answer here; keep this at 0 for no deduction.

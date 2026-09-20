@@ -74,7 +74,6 @@ export function QuizClient({ questions }: QuizClientProps) {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [answerFeedback, setAnswerFeedback] = useState<boolean | null>(null);
-  const [isRevealingFeedback, setIsRevealingFeedback] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const currentQuestion = quizQuestions[currentIndex];
@@ -86,7 +85,7 @@ export function QuizClient({ questions }: QuizClientProps) {
   const totalQuestions = quizQuestions.length;
   const progressValue = (lockedCount / totalQuestions) * 100;
   const isLastQuestion = currentIndex === quizQuestions.length - 1;
-  const canContinue = Boolean(currentChoiceId) && !isPending && !isRevealingFeedback;
+  const canContinue = Boolean(currentChoiceId) && !isPending;
   const buildSubmission = useCallback(
     (nextLockedAnswers: Record<string, string>) =>
       quizQuestions.map((question) => ({
@@ -105,7 +104,6 @@ export function QuizClient({ questions }: QuizClientProps) {
     setResult(null);
     setErrorMessage("");
     setAnswerFeedback(null);
-    setIsRevealingFeedback(false);
   }
 
   function exitQuiz() {
@@ -161,19 +159,14 @@ export function QuizClient({ questions }: QuizClientProps) {
     // Pressing Next locks the answer. Going back later only reviews this saved choice.
     setLockedAnswers(nextLockedAnswers);
     setErrorMessage("");
-    setIsRevealingFeedback(true);
     startTransition(async () => {
       try {
         const checked = await checkAnswer({
           questionId: currentQuestion.id,
           choiceId: nextLockedAnswers[currentQuestion.id],
         });
-        window.setTimeout(() => {
-          setAnswerFeedback(checked.isCorrect);
-          setIsRevealingFeedback(false);
-        }, 200);
+        setAnswerFeedback(checked.isCorrect);
       } catch (error) {
-        setIsRevealingFeedback(false);
         setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");
       }
     });
@@ -187,7 +180,6 @@ export function QuizClient({ questions }: QuizClientProps) {
     setCurrentIndex((index) => index - 1);
     setErrorMessage("");
     setAnswerFeedback(null);
-    setIsRevealingFeedback(false);
   }
 
   if (quizQuestions.length === 0) {

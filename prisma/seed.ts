@@ -5,7 +5,18 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { loadQuestionFile, validateQuestionFile } from "../src/lib/question-file";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is missing.");
+}
+
+const databaseUrlWithCompat = new URL(databaseUrl);
+if (databaseUrlWithCompat.searchParams.get("sslmode") === "require" &&
+    !databaseUrlWithCompat.searchParams.has("uselibpqcompat")) {
+  databaseUrlWithCompat.searchParams.set("uselibpqcompat", "true");
+}
+
+const adapter = new PrismaPg({ connectionString: databaseUrlWithCompat.toString() });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

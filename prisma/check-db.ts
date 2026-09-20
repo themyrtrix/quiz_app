@@ -10,7 +10,12 @@ async function main() {
     throw new Error("DATABASE_URL is missing. Add your Prisma Postgres URL to .env.");
   }
 
-  const client = new Client({ connectionString });
+  const url = new URL(connectionString);
+  if (url.searchParams.get("sslmode") === "require" && !url.searchParams.has("uselibpqcompat")) {
+    url.searchParams.set("uselibpqcompat", "true");
+  }
+
+  const client = new Client({ connectionString: url.toString() });
   await client.connect();
   const result = await client.query<{ ok: number }>("select 1 as ok");
   await client.end();

@@ -26,6 +26,21 @@ export type QuizResult = {
   questions: QuizResultQuestion[];
 };
 
+export async function checkAnswer(answer: QuizSubmission): Promise<{ isCorrect: boolean }> {
+  const question = await getPrisma().question.findUnique({
+    where: { id: answer.questionId },
+    include: { choices: true },
+  });
+  const selectedChoice = question?.choices.find((choice) => choice.id === answer.choiceId);
+  const correctChoice = question?.choices.find((choice) => choice.isCorrect);
+
+  if (!question || !selectedChoice || selectedChoice.questionId !== question.id || !correctChoice) {
+    throw new Error("The selected answer could not be checked.");
+  }
+
+  return { isCorrect: selectedChoice.id === correctChoice.id };
+}
+
 export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult> {
   const prisma = getPrisma();
 

@@ -345,6 +345,12 @@ a:focus-visible,
   font-size: 0.875rem;
 }
 
+.quiz-answer-feedback {
+  align-self: flex-start;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
 .quiz-choice {
   display: grid;
   grid-template-columns: auto 1fr;

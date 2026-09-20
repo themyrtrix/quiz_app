@@ -4,7 +4,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { submitQuiz, type QuizResult } from "@/actions/quiz";
+import { checkAnswer, submitQuiz, type QuizResult } from "@/actions/quiz";
 import { quizText } from "@/config";
 import { QuizReview } from "@/components/quiz/QuizReview";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +73,7 @@ export function QuizClient({ questions }: QuizClientProps) {
   const [lockedAnswers, setLockedAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [answerFeedback, setAnswerFeedback] = useState<boolean | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const currentQuestion = quizQuestions[currentIndex];
@@ -94,6 +95,7 @@ export function QuizClient({ questions }: QuizClientProps) {
     setLockedAnswers({});
     setResult(null);
     setErrorMessage("");
+    setAnswerFeedback(null);
   }
 
   function exitQuiz() {
@@ -128,6 +130,24 @@ export function QuizClient({ questions }: QuizClientProps) {
       return;
     }
 
+    if (answerFeedback !== null) {
+      setAnswerFeedback(null);
+      if (isLastQuestion) {
+        startTransition(async () => {
+          try {
+            const nextResult = await submitQuiz(buildSubmission(lockedAnswers));
+            setResult(nextResult);
+            setScreen("results");
+          } catch (error) {
+            setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");
+          }
+        });
+        return;
+      }
+      setCurrentIndex((index) => index + 1);
+      return;
+    }
+
     const nextLockedAnswers = currentLockedChoiceId
       ? lockedAnswers
       : {
@@ -138,22 +158,17 @@ export function QuizClient({ questions }: QuizClientProps) {
     // Pressing Next locks the answer. Going back later only reviews this saved choice.
     setLockedAnswers(nextLockedAnswers);
     setErrorMessage("");
-
-    if (isLastQuestion) {
-      startTransition(async () => {
-        try {
-          const submission = buildSubmission(nextLockedAnswers);
-          const nextResult = await submitQuiz(submission);
-          setResult(nextResult);
-          setScreen("results");
-        } catch (error) {
-          setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");
-        }
-      });
-      return;
-    }
-
-    setCurrentIndex((index) => index + 1);
+    startTransition(async () => {
+      try {
+        const checked = await checkAnswer({
+          questionId: currentQuestion.id,
+          choiceId: nextLockedAnswers[currentQuestion.id],
+        });
+        setAnswerFeedback(checked.isCorrect);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");
+      }
+    });
   }
 
   function handleBack() {
@@ -163,6 +178,7 @@ export function QuizClient({ questions }: QuizClientProps) {
 
     setCurrentIndex((index) => index - 1);
     setErrorMessage("");
+    setAnswerFeedback(null);
   }
 
   if (quizQuestions.length === 0) {
@@ -294,6 +310,14 @@ export function QuizClient({ questions }: QuizClientProps) {
           <p className="quiz-question-hint">
             {quizText.questionHint}
           </p>
+          {answerFeedback !== null ? (
+            <Badge
+              className="quiz-answer-feedback"
+              variant={answerFeedback ? "success" : "destructive"}
+            >
+              {answerFeedback ? quizText.correctFeedback : quizText.wrongFeedback}
+            </Badge>
+          ) : null}
 
           <RadioGroup
             className="gap-3"
@@ -327,7 +351,9 @@ export function QuizClient({ questions }: QuizClientProps) {
             onClick={handleNext}
             type="button"
           >
-            {isLastQuestion ? quizText.submitButton : quizText.nextButton}
+            {answerFeedback !== null
+              ? (isLastQuestion ? quizText.submitButton : quizText.continueButton)
+              : quizText.nextButton}
           </Button>
         </CardFooter>
       </Card>

@@ -85,7 +85,7 @@ const { Client } = require("pg");
 NODE
 ```
 
-## What students experience
+## What users experience
 
 1. The Start screen has Start and History buttons.
 2. Questions and choices are shuffled for each new quiz.
@@ -118,7 +118,7 @@ The score is shown against the actual number of uploaded questions, for example:
 ## Simple project map
 
 ```text
-prisma/questions.json       Questions supplied by the teacher
+prisma/questions.json       Questions supplied
 src/config.ts               App text and scoring settings
 src/app/page.tsx            Homepage and active question loading
 src/app/history/            History pages

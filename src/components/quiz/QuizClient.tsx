@@ -2,7 +2,7 @@
 
 // Renders the start, question, and results screens for QuizMart.
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import Link from "next/link";
 import { checkAnswer, submitQuiz, type QuizResult } from "@/actions/quiz";
 import { quizText } from "@/config";
@@ -74,6 +74,7 @@ export function QuizClient({ questions }: QuizClientProps) {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [answerFeedback, setAnswerFeedback] = useState<boolean | null>(null);
+  const [isRevealingFeedback, setIsRevealingFeedback] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const currentQuestion = quizQuestions[currentIndex];
@@ -85,7 +86,15 @@ export function QuizClient({ questions }: QuizClientProps) {
   const totalQuestions = quizQuestions.length;
   const progressValue = (lockedCount / totalQuestions) * 100;
   const isLastQuestion = currentIndex === quizQuestions.length - 1;
-  const canContinue = Boolean(currentChoiceId) && !isPending;
+  const canContinue = Boolean(currentChoiceId) && !isPending && !isRevealingFeedback;
+  const buildSubmission = useCallback(
+    (nextLockedAnswers: Record<string, string>) =>
+      quizQuestions.map((question) => ({
+        questionId: question.id,
+        choiceId: nextLockedAnswers[question.id],
+      })),
+    [quizQuestions],
+  );
 
   function resetQuiz() {
     setQuizQuestions(shuffleQuizQuestions(questions));
@@ -96,6 +105,7 @@ export function QuizClient({ questions }: QuizClientProps) {
     setResult(null);
     setErrorMessage("");
     setAnswerFeedback(null);
+    setIsRevealingFeedback(false);
   }
 
   function exitQuiz() {
@@ -115,13 +125,6 @@ export function QuizClient({ questions }: QuizClientProps) {
     setDraftAnswers((answers) => ({
       ...answers,
       [currentQuestion.id]: choiceId,
-    }));
-  }
-
-  function buildSubmission(nextLockedAnswers: Record<string, string>) {
-    return quizQuestions.map((question) => ({
-      questionId: question.id,
-      choiceId: nextLockedAnswers[question.id],
     }));
   }
 
@@ -158,14 +161,19 @@ export function QuizClient({ questions }: QuizClientProps) {
     // Pressing Next locks the answer. Going back later only reviews this saved choice.
     setLockedAnswers(nextLockedAnswers);
     setErrorMessage("");
+    setIsRevealingFeedback(true);
     startTransition(async () => {
       try {
         const checked = await checkAnswer({
           questionId: currentQuestion.id,
           choiceId: nextLockedAnswers[currentQuestion.id],
         });
-        setAnswerFeedback(checked.isCorrect);
+        window.setTimeout(() => {
+          setAnswerFeedback(checked.isCorrect);
+          setIsRevealingFeedback(false);
+        }, 200);
       } catch (error) {
+        setIsRevealingFeedback(false);
         setErrorMessage(error instanceof Error ? error.message : "Something went wrong.");
       }
     });
@@ -179,6 +187,7 @@ export function QuizClient({ questions }: QuizClientProps) {
     setCurrentIndex((index) => index - 1);
     setErrorMessage("");
     setAnswerFeedback(null);
+    setIsRevealingFeedback(false);
   }
 
   if (quizQuestions.length === 0) {
@@ -351,9 +360,7 @@ export function QuizClient({ questions }: QuizClientProps) {
             onClick={handleNext}
             type="button"
           >
-            {answerFeedback !== null
-              ? (isLastQuestion ? quizText.submitButton : quizText.continueButton)
-              : quizText.nextButton}
+            {answerFeedback !== null && isLastQuestion ? quizText.submitButton : quizText.nextButton}
           </Button>
         </CardFooter>
       </Card>

@@ -91,7 +91,7 @@ NODE
 2. Questions and choices are shuffled for each new quiz.
 3. Selecting an answer and pressing Next locks that answer.
 4. The selected answer row turns green or red after it is checked.
-5. The student presses Continue to move on.
+5. After a short feedback pause, the answer turns green or red and the student presses Next.
 6. Submit saves the attempt and shows the final score.
 7. History contains the saved attempt and its answer review.
 8. Exit asks for confirmation and does not save the unfinished quiz.

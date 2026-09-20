@@ -124,6 +124,16 @@ a:focus-visible,
   background: var(--quiz-page-bg);
 }
 
+.quiz-history-loading {
+  cursor: progress;
+}
+
+.quiz-loading-indicator {
+  color: var(--quiz-muted-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .quiz-card {
   width: 100%;
   border: 1px solid var(--quiz-border);

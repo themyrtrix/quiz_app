@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
+import { getLocalAttempt, getLocalQuestion } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,9 @@ type HistoryDetailProps = {
 
 export default async function HistoryDetailPage({ params }: HistoryDetailProps) {
   const { id } = await params;
-  const attempt = await getPrisma().attempt.findUnique({
+  const attempt = process.env.DATABASE_MODE !== "remote"
+    ? await getLocalAttempt(id)
+    : await getPrisma().attempt.findUnique({
     where: { id },
     include: {
       answers: {
@@ -26,13 +29,29 @@ export default async function HistoryDetailPage({ params }: HistoryDetailProps) 
         include: { question: { include: { choices: true } }, choice: true },
       },
     },
-  });
+      });
 
   if (!attempt) {
     notFound();
   }
 
-  const questions = attempt.answers.map((answer) => {
+  const questions = process.env.DATABASE_MODE !== "remote"
+    ? await Promise.all(attempt.answers.map(async (answer) => {
+      const question = await getLocalQuestion(answer.questionId);
+      const selectedChoice = question?.choices.find((choice) => choice.id === answer.choiceId);
+      const correctChoice = question?.choices.find((choice) => choice.isCorrect);
+      return {
+        questionId: answer.questionId,
+        questionText: question?.text ?? "",
+        correctAnswerText: correctChoice?.text ?? "",
+        userAnswerText: selectedChoice?.text ?? "",
+        isCorrect: answer.isCorrect,
+      };
+    }))
+    : attempt.answers.map((answer) => {
+    if (!("question" in answer)) {
+      throw new Error("Stored history entry is missing its question.");
+    }
     const correctChoice = answer.question.choices.find((choice) => choice.isCorrect);
     return {
       questionId: answer.questionId,

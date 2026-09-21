@@ -4,6 +4,7 @@
 
 import { getPrisma } from "@/lib/prisma";
 import { quizSettings } from "@/config";
+import { createLocalAttempt, getLocalQuestion } from "@/lib/local-store";
 
 export type QuizSubmission = {
   questionId: string;
@@ -27,6 +28,16 @@ export type QuizResult = {
 };
 
 export async function checkAnswer(answer: QuizSubmission): Promise<{ isCorrect: boolean }> {
+  if (process.env.DATABASE_MODE !== "remote") {
+    const question = await getLocalQuestion(answer.questionId);
+    const selectedChoice = question?.choices.find((choice) => choice.id === answer.choiceId);
+    const correctChoice = question?.choices.find((choice) => choice.isCorrect);
+    if (!question || !selectedChoice || !correctChoice) {
+      throw new Error("The selected answer could not be checked.");
+    }
+    return { isCorrect: selectedChoice.id === correctChoice.id };
+  }
+
   const question = await getPrisma().question.findUnique({
     where: { id: answer.questionId },
     include: { choices: true },
@@ -42,8 +53,6 @@ export async function checkAnswer(answer: QuizSubmission): Promise<{ isCorrect: 
 }
 
 export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult> {
-  const prisma = getPrisma();
-
   if (answers.length === 0) {
     throw new Error("Please answer at least one question before submitting.");
   }
@@ -55,6 +64,49 @@ export async function submitQuiz(answers: QuizSubmission[]): Promise<QuizResult>
     throw new Error("Each question can only be answered once.");
   }
 
+  if (process.env.DATABASE_MODE !== "remote") {
+    const questions = await Promise.all(questionIds.map((id) => getLocalQuestion(id)));
+    if (questions.some((question) => !question)) {
+      throw new Error("One or more questions could not be found.");
+    }
+    const checkedAnswers = answers.map((answer, index) => {
+      const question = questions[index]!;
+      const selectedChoice = question.choices.find((choice) => choice.id === answer.choiceId);
+      const correctChoice = question.choices.find((choice) => choice.isCorrect);
+      if (!selectedChoice || !correctChoice) throw new Error("Selected choice could not be checked.");
+      return { question, selectedChoice, correctChoice, isCorrect: selectedChoice.id === correctChoice.id };
+    });
+    const correctCount = checkedAnswers.filter((answer) => answer.isCorrect).length;
+    const wrongCount = checkedAnswers.length - correctCount;
+    const score = Math.max(0, correctCount * quizSettings.pointsForCorrectAnswer +
+      wrongCount * quizSettings.pointsForWrongAnswer);
+    const attempt = await createLocalAttempt({
+      score,
+      correctCount,
+      wrongCount,
+      totalQuestions: answers.length,
+      answers: checkedAnswers.map(({ question, selectedChoice, isCorrect }) => ({
+        questionId: question.id,
+        choiceId: selectedChoice.id,
+        isCorrect,
+      })),
+    });
+    return {
+      attemptId: attempt.id,
+      score,
+      correctCount,
+      wrongCount,
+      questions: checkedAnswers.map(({ question, selectedChoice, correctChoice, isCorrect }) => ({
+        questionId: question.id,
+        questionText: question.text,
+        correctAnswerText: correctChoice.text,
+        userAnswerText: selectedChoice.text,
+        isCorrect,
+      })),
+    };
+  }
+
+  const prisma = getPrisma();
   const questions = await prisma.question.findMany({
     where: {
       id: {

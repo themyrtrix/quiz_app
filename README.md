@@ -144,8 +144,13 @@ prisma/schema.prisma        Database structure
 
 ## Database and safety
 
-Quizmart uses Prisma Postgres. The local `.env` file contains the private `DATABASE_URL`;
-never commit it or share it.
+Quizmart runs in offline local mode by default. Questions and quiz history are stored in
+`.data/quiz-data.json`, which is created automatically and ignored by Git. It does not need
+internet access or a database server.
+
+To use the hosted Prisma Postgres database instead, set `DATABASE_MODE=remote` and provide
+`DATABASE_URL` in `.env`. The local `.env` file contains the private URL; never commit it or
+share it.
 
 When `questions.json` changes, old questions are archived and new questions become active.
 Existing History attempts are preserved. The app does not use a question API; questions come

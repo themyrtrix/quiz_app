@@ -3,6 +3,7 @@
 import { QuizClient, type QuizQuestion } from "@/components/quiz/QuizClient";
 import { getPrisma } from "@/lib/prisma";
 import { syncQuestionBank } from "@/lib/question-bank";
+import { getLocalQuestions } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,15 @@ function shuffle<T>(items: T[]) {
 }
 
 async function getQuizQuestions(): Promise<QuizQuestion[]> {
+  if (process.env.DATABASE_MODE !== "remote") {
+    const questions = await getLocalQuestions();
+    return shuffle(questions).map((question) => ({
+      id: question.id,
+      text: question.text,
+      choices: shuffle(question.choices.map(({ id, text }) => ({ id, text }))),
+    }));
+  }
+
   await syncQuestionBank();
   const prisma = getPrisma();
   const questions = await prisma.question.findMany({

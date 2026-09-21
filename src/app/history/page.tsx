@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { quizText } from "@/config";
 import { getPrisma } from "@/lib/prisma";
+import { getLocalAttempts } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +16,13 @@ function formatDate(date: Date) {
 }
 
 export default async function HistoryPage() {
-  const attempts = await getPrisma().attempt.findMany({
+  const attempts = process.env.DATABASE_MODE !== "remote"
+    ? (await getLocalAttempts()).map((attempt) => ({ ...attempt, createdAt: new Date(attempt.createdAt) }))
+    : await getPrisma().attempt.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
     select: { id: true, score: true, correctCount: true, wrongCount: true, totalQuestions: true, createdAt: true },
-  });
+      });
 
   return (
     <main className="quiz-shell">
